@@ -1,0 +1,52 @@
+[package]
+name = "stellar-blocki-fuzz"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+soroban-sdk = "21.0.0"
+
+[dependencies.property-token]
+path = "../contracts/core/property-token"
+
+[dependencies.marketplace]
+path = "../contracts/core/marketplace"
+
+[dependencies.escrow]
+path = "../contracts/core/escrow"
+
+[dependencies.registry]
+path = "../contracts/core/registry"
+
+# Prevent this from interfering with workspaces
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "fuzz_property_transfer"
+path = "fuzz_targets/fuzz_property_transfer.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_marketplace_buy"
+path = "fuzz_targets/fuzz_marketplace_buy.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_escrow_lock"
+path = "fuzz_targets/fuzz_escrow_lock.rs"
+test = false
+doc = false
+
+[[bin]]
+name = "fuzz_registry_register"
+path = "fuzz_targets/fuzz_registry_register.rs"
+test = false
+doc = false

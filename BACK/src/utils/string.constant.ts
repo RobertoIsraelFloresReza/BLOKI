@@ -1,0 +1,56 @@
+export const stringConstants = {
+  noFileUploaded: 'No file uploaded',
+  invalidFileType: 'Invalid file type',
+  duplicatedEmailAtRow: 'Duplicated email in excel row ',
+  missingFieldsAtRow: 'Missing fields in excel row ',
+  invalidRoleAtRow: 'Invalid role at row ',
+  incorrectAuth: 'Incorrect e-mail or password.',
+  duplicateRecord: 'This record already exists.',
+  duplicateUser: 'This user already exists',
+  duplicateUserAtRow: 'User already exists in excel row ',
+  duplicateRole: 'This role already exists',
+  duplicateCardUUID: 'The UUID already exists',
+  existDefinitiveSolution: 'Already exists a definitive solution',
+  existProvisionalSolution: 'Already exists a provisional solution',
+  quantityOfUserExceeded: 'Quantity of site user exceeded',
+  codeExpired: 'The code has expired',
+  wrongResetCode: 'Wrong reset code',
+  emailIsMissing: 'The e-mail is missing',
+  duplicateLevelMachineId: 'A record with that level machine id already exists',
+  resetPasswordEmailSubject: 'Reset Your Password - OSM',
+  welcomeEmailSubject: 'Welcome to Our Platform!',
+  characters: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789',
+  none: 'None',
+
+  //Roles
+  SUPER_ADMIN: 'SUPER_ADMIN',
+  DIRECTOR: 'DIRECTOR',
+  MANAGER: 'MANAGER',
+  EMPLOYEE: 'EMPLOYEE',
+  
+  //Status
+  STATUS_ACTIVE: 'ACTIVE',
+  STATUS_INACTIVE: 'INACTIVE',
+  STATUS_OPEN: 'OPEN',
+  STATUS_CLOSED: 'CLOSED',
+  STATUS_PENDING: 'PENDING',
+  STATUS_SENT: 'SENT',
+  STATUS_DELIVERED: 'DELIVERED',
+  STATUS_READ: 'READ',
+  STATUS_FAILED: 'FAILED',
+  STATUS_RECEIVED: 'RECEIVED',
+
+  userNotFound: 'User not found',
+  notFound: 'Not found',
+
+  //sql errors
+  INSERT_DATA_ERROR: 'INSERT_DATA_ERROR',
+  TABLE_NOT_FOUND: 'TABLE_NOT_FOUND',
+  UNHANDLED_SQL_ERROR: 'UNHANDLED_SQL_ERROR',
+
+  SALT_ROUNDS: 10,
+  FILE_TYPE_IMAGE: 'IMAGE',
+  FILE_TYPE_PDF: 'PDF',
+  FILE_TYPE_VIDEO: 'VIDEO',
+  FILE_TYPE_OTHER: 'OTHER',
+};

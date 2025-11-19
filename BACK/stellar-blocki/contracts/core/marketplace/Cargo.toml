@@ -1,0 +1,20 @@
+[package]
+name = "marketplace"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+doctest = false
+
+[dependencies]
+soroban-sdk = { workspace = true }
+stellar-property-errors = { path = "../../utils/errors" }
+stellar-property-events = { path = "../../utils/events" }
+stellar-property-storage = { path = "../../utils/storage" }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }
+
+[features]
+testutils = ["soroban-sdk/testutils"]

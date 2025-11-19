@@ -1,0 +1,28 @@
+[workspace]
+resolver = "2"
+members = [
+    "contracts/core/property-token",
+    "contracts/core/marketplace",
+    "contracts/core/escrow",
+    "contracts/core/registry",
+    "contracts/utils/deployer",
+    "contracts/utils/storage",
+    "contracts/utils/events",
+    "contracts/utils/errors",
+]
+
+[workspace.dependencies]
+soroban-sdk = "22"
+
+[profile.release]
+opt-level = "z"
+overflow-checks = true
+debug = 0
+strip = "symbols"
+panic = "abort"
+codegen-units = 1
+lto = true
+
+[profile.release-with-logs]
+inherits = "release"
+debug-assertions = true
