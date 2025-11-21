@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blocki - Environment Check</title>
+  <style>
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #0f172a;
+      color: #e2e8f0;
+    }
+    h1 {
+      color: #38bdf8;
+      border-bottom: 2px solid #38bdf8;
+      padding-bottom: 10px;
+    }
+    .env-var {
+      background: #1e293b;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border-left: 4px solid #38bdf8;
+    }
+    .env-var.error {
+      border-left-color: #ef4444;
+    }
+    .env-var.success {
+      border-left-color: #22c55e;
+    }
+    .key {
+      font-weight: bold;
+      color: #38bdf8;
+    }
+    .value {
+      font-family: 'Courier New', monospace;
+      color: #a5f3fc;
+      word-break: break-all;
+    }
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin-left: 10px;
+    }
+    .status.ok {
+      background: #22c55e;
+      color: white;
+    }
+    .status.error {
+      background: #ef4444;
+      color: white;
+    }
+    .info {
+      background: #1e293b;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 30px;
+      border: 1px solid #334155;
+    }
+    code {
+      background: #0f172a;
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: #a5f3fc;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔍 Blocki - Environment Variables Check</h1>
+
+  <div id="env-check"></div>
+
+  <div class="info">
+    <h3>📋 What to do if variables are undefined:</h3>
+    <ol>
+      <li>Go to <strong>Dockploy Settings</strong> → Environment Variables</li>
+      <li>Add all variables starting with <code>VITE_</code></li>
+      <li><strong>Redeploy</strong> the application</li>
+      <li>Refresh this page</li>
+    </ol>
+    <p><strong>Note:</strong> Environment variables in Vite are baked into the build at build-time, not runtime.</p>
+  </div>
+
+  <script type="module">
+    const requiredVars = [
+      'VITE_API_URL',
+      'VITE_API_TIMEOUT',
+      'VITE_STELLAR_NETWORK',
+      'VITE_HORIZON_URL',
+      'VITE_SOROBAN_RPC_URL',
+      'VITE_USE_MOCK_DATA',
+      'VITE_ENABLE_SEP24',
+      'VITE_ENABLE_KYC',
+      'VITE_FREIGHTER_ENABLED'
+    ]
+
+    const container = document.getElementById('env-check')
+    let allOk = true
+
+    requiredVars.forEach(varName => {
+      const value = import.meta.env[varName]
+      const isUndefined = value === undefined
+      const isEmpty = value === '' || value === null
+
+      const div = document.createElement('div')
+      div.className = `env-var ${isUndefined || isEmpty ? 'error' : 'success'}`
+
+      const status = isUndefined || isEmpty ? 'ERROR' : 'OK'
+      const statusClass = isUndefined || isEmpty ? 'error' : 'ok'
+
+      if (isUndefined || isEmpty) allOk = false
+
+      div.innerHTML = `
+        <div>
+          <span class="key">${varName}</span>
+          <span class="status ${statusClass}">${status}</span>
+        </div>
+        <div class="value">${isUndefined ? '❌ undefined' : isEmpty ? '⚠️ empty' : '✅ ' + value}</div>
+      `
+
+      container.appendChild(div)
+    })
+
+    // Add summary
+    const summary = document.createElement('div')
+    summary.className = `info ${allOk ? 'success' : 'error'}`
+    summary.innerHTML = `
+      <h3>${allOk ? '✅ All environment variables are configured!' : '❌ Some environment variables are missing!'}</h3>
+      ${allOk
+        ? '<p>Your deployment is correctly configured. The app should work properly.</p>'
+        : '<p>Please configure the missing variables in Dockploy and redeploy.</p>'}
+    `
+    container.appendChild(summary)
+
+    // Log to console
+    console.log('🔍 Environment Variables Check:')
+    console.table(
+      requiredVars.reduce((acc, varName) => {
+        acc[varName] = import.meta.env[varName] || '❌ undefined'
+        return acc
+      }, {})
+    )
+  </script>
+</body>
+</html>

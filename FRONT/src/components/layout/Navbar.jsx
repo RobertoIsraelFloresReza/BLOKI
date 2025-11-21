@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Home, Search, Wallet, User, TrendingUp } from 'lucide-react'
-import { Badge, ThemeToggle, LogoWithText } from '@/components/ui'
+import { Home, Search, Wallet, User, TrendingUp, LogOut, Store, X } from 'lucide-react'
+import { Badge, ThemeToggle, LanguageSwitcher, LogoWithText, Button } from '@/components/ui'
 import { WalletConnect } from '@/components/wallet'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@/components/ui'
+import { useStrings } from '@/utils/localizations/useStrings'
 
 /**
  * Navbar Component
@@ -10,8 +11,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from '@
  * Bottom navigation for mobile
  * Modern glassmorphism design
  */
-export function Navbar({ activeTab = 'marketplace', onTabChange }) {
+export function Navbar({ activeTab = 'marketplace', onTabChange, user, onLogout, showFilters = false, filters = [], selectedFilter = 'all', onFilterChange, onMobileSearchClick }) {
   const [showWalletModal, setShowWalletModal] = useState(false)
+  const Strings = useStrings()
 
   const handleTabChange = (tabId) => {
     if (onTabChange) {
@@ -19,35 +21,34 @@ export function Navbar({ activeTab = 'marketplace', onTabChange }) {
     }
   }
 
-  // Navigation items
+  // Navigation items (without profile for desktop, it will be in the right side)
   const navItems = [
     {
       id: 'marketplace',
-      label: 'Marketplace',
+      label: Strings.marketplace,
       icon: Home,
       desktop: true,
       mobile: true
     },
     {
-      id: 'explore',
-      label: 'Explorar',
-      icon: Search,
+      id: 'seller',
+      label: Strings.properties || 'Propiedades',
+      icon: Store,
       desktop: true,
       mobile: true
     },
     {
-      id: 'portfolio',
-      label: 'Portfolio',
-      icon: TrendingUp,
+      id: 'wallet',
+      label: Strings.wallet || 'Wallet',
+      icon: Wallet,
       desktop: true,
-      mobile: true,
-      primary: true // Destacado en mobile
+      mobile: true
     },
     {
       id: 'profile',
-      label: 'Perfil',
+      label: Strings.profile,
       icon: User,
-      desktop: true,
+      desktop: false, // Profile will be shown in right side for desktop
       mobile: true
     }
   ]
@@ -55,14 +56,13 @@ export function Navbar({ activeTab = 'marketplace', onTabChange }) {
   return (
     <>
       {/* Desktop Navbar - Floating */}
-      <div className="hidden lg:block sticky top-0 z-50 pb-4 pt-4">
-        <nav className="bg-card/80 backdrop-blur-xl border border-border shadow-lg mx-auto w-[80%] rounded-2xl">
+      <div className="hidden lg:block sticky top-0 z-50 pb-2 pt-4">
+        <nav className={`bg-card/90 backdrop-blur-xl mx-auto w-[82%] transition-all duration-300 ${showFilters ? 'rounded-t-2xl' : 'rounded-2xl'}`}>
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               {/* Logo */}
-              <div className="flex items-center gap-3">
-                <LogoWithText size="sm" />
-                <Badge variant="secondary" className="text-xs">v2.0</Badge>
+              <div className="flex items-center gap-0">
+                <LogoWithText size="xs" />
               </div>
 
               {/* Navigation Links */}
@@ -72,79 +72,107 @@ export function Navbar({ activeTab = 'marketplace', onTabChange }) {
                   const isActive = activeTab === item.id
 
                   return (
-                    <button
-                      key={item.id}
-                      onClick={() => handleTabChange(item.id)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 ${
-                        isActive
-                          ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
-                          : 'text-muted-foreground hover:text-foreground hover:bg-accent'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4" />
-                      <span>{item.label}</span>
-                    </button>
+                    <div key={item.id} className="relative group">
+                      <button
+                        onClick={() => handleTabChange(item.id)}
+                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 relative ${
+                          isActive
+                            ? 'text-primary'
+                            : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4" />
+                        <span>{item.label}</span>
+
+                        {/* Active indicator - Blue line */}
+                        {isActive && (
+                          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />
+                        )}
+                      </button>
+                    </div>
                   )
                 })}
               </div>
 
               {/* Right side actions */}
               <div className="flex items-center gap-3">
+                {/* Profile Button - Modern design */}
                 <button
-                  onClick={() => setShowWalletModal(true)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl bg-secondary text-secondary-foreground hover:bg-secondary/90 transition-all duration-200 shadow-md hover:shadow-lg"
+                  onClick={() => handleTabChange('profile')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 relative ${
+                    activeTab === 'profile'
+                      ? 'text-primary'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-accent'
+                  }`}
                 >
-                  <Wallet className="w-4 h-4" />
-                  <span className="text-sm font-medium">Connect</span>
+                  <User className="w-4 h-4" />
+                  <span className="max-w-[100px] truncate">
+                    {user ? (user.name || user.email) : (Strings.profile || 'Perfil')}
+                  </span>
+
+                  {/* Active indicator - Blue line */}
+                  {activeTab === 'profile' && (
+                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-full" />
+                  )}
                 </button>
+
+                <div className="w-px h-6 bg-border" />
+
+                <LanguageSwitcher />
                 <ThemeToggle />
               </div>
             </div>
           </div>
+
+          {/* Filter Tabs Extension - Only on Marketplace with Scroll */}
+          {showFilters && activeTab === 'marketplace' && (
+            <div className="border-t border-border/30 px-6 py-4 animate-slideDown rounded-b-2xl">
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+                {filters.map((filter) => (
+                  <button
+                    key={filter.id}
+                    onClick={() => onFilterChange?.(filter.id)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${
+                      selectedFilter === filter.id
+                        ? 'bg-primary text-primary-foreground shadow-md'
+                        : 'bg-accent/50 text-muted-foreground hover:bg-accent hover:text-foreground'
+                    }`}
+                  >
+                    {filter.icon}
+                    <span>{filter.name}</span>
+                    <span className="text-xs opacity-70">({filter.count})</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </nav>
       </div>
 
       {/* Mobile Navbar - Bottom Fixed */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50">
         <div className="bg-card/95 backdrop-blur-xl border-t border-border shadow-2xl">
-          <div className="flex justify-around items-end px-4 pb-safe pt-3 relative">
+          <div className="flex justify-around items-center px-4 pb-0 pt-2 relative">
             {navItems.filter(item => item.mobile).map((item) => {
               const Icon = item.icon
               const isActive = activeTab === item.id
-              const isPrimary = item.primary
 
               return (
                 <button
                   key={item.id}
                   onClick={() => handleTabChange(item.id)}
-                  className={`flex flex-col items-center justify-center transition-all duration-300 relative ${
-                    isPrimary
-                      ? 'w-16 h-16 -mt-8 rounded-2xl shadow-2xl'
-                      : 'w-14 h-14 rounded-xl'
-                  } ${
-                    isPrimary
-                      ? isActive
-                        ? 'bg-primary text-primary-foreground scale-110'
-                        : 'bg-primary text-primary-foreground hover:scale-105'
-                      : isActive
-                      ? 'text-primary bg-primary/10'
-                      : 'text-muted-foreground hover:text-foreground'
+                  className={`flex flex-col items-center justify-center transition-all duration-300 relative w-14 h-14 rounded-xl ${
+                    isActive ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
                   }`}
                 >
-                  <Icon
-                    className={`${
-                      isPrimary ? 'w-7 h-7' : 'w-5 h-5'
-                    } mb-1`}
-                  />
-                  <span className={`font-medium ${
-                    isPrimary ? 'text-xs' : 'text-[10px]'
-                  }`}>
+                  <Icon className="w-5 h-5 mb-1" />
+                  <span className="font-medium text-[10px]">
                     {item.label}
                   </span>
 
-                  {/* Active indicator */}
-                  {isActive && !isPrimary && (
-                    <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
+                  {/* Active indicator - Blue dot for mobile */}
+                  {isActive && (
+                    <div className="absolute top-0 w-1 h-1 bg-primary rounded-full" />
                   )}
                 </button>
               )
@@ -157,14 +185,19 @@ export function Navbar({ activeTab = 'marketplace', onTabChange }) {
       <div className="lg:hidden sticky top-0 z-40 bg-card/80 backdrop-blur-xl border-b border-border">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
-            <LogoWithText size="sm" />
+            <LogoWithText size="xs" />
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => setShowWalletModal(true)}
-                className="p-2 rounded-lg bg-secondary/10 text-secondary hover:bg-secondary/20 transition-colors"
-              >
-                <Wallet className="w-5 h-5" />
-              </button>
+              {/* Search Icon - Only on Marketplace */}
+              {activeTab === 'marketplace' && (
+                <button
+                  onClick={onMobileSearchClick}
+                  className="p-2 hover:bg-accent rounded-lg transition-colors"
+                  aria-label="Search"
+                >
+                  <Search className="w-5 h-5" />
+                </button>
+              )}
+              <LanguageSwitcher />
               <ThemeToggle />
             </div>
           </div>
@@ -178,7 +211,7 @@ export function Navbar({ activeTab = 'marketplace', onTabChange }) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Wallet className="w-5 h-5 text-primary" />
-              Conectar Wallet
+              {Strings.connectWallet}
             </DialogTitle>
           </DialogHeader>
           <div className="py-4">

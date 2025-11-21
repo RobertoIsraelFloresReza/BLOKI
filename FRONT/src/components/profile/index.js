@@ -1,0 +1,1 @@
+export { PropertyCardProfile } from './PropertyCardProfile'

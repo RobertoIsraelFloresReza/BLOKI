@@ -10,8 +10,9 @@ export function Logo({ size = 'default', withEffects = false, className }) {
   const { theme } = useTheme()
 
   const sizes = {
-    sm: 'w-24 h-24',
-    default: 'w-36 h-36',
+    xs: 'w-10 h-10',
+    sm: 'w-16 h-16',
+    default: 'w-20 h-20',
     lg: 'w-48 h-48',
   }
 
@@ -38,57 +39,27 @@ export function Logo({ size = 'default', withEffects = false, className }) {
           transformStyle: 'preserve-3d',
         }}
       >
-        {/* Outer rotating ring - Blockchain effect */}
-        {withEffects && (
-          <>
-            <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary via-secondary to-primary opacity-0 group-hover:opacity-20 blur-xl transition-opacity duration-500 animate-pulse" />
-            <div className="absolute inset-0 rounded-full border-2 border-primary/30 animate-spin-slow" style={{ animationDuration: '8s' }} />
-            <div className="absolute inset-0 rounded-full border-2 border-secondary/20 animate-spin-slow" style={{ animationDuration: '12s', animationDirection: 'reverse' }} />
-          </>
-        )}
-
-        {/* Logo container with glassmorphism */}
-        <div
-          className={cn(
-            'relative rounded-full overflow-hidden',
-            'bg-gradient-to-br from-card/80 to-card/60',
-            'backdrop-blur-sm',
-            'border border-border/50',
-            'shadow-lg',
-            withEffects && [
-              'group-hover:scale-110',
-              'group-hover:shadow-2xl',
-              'group-hover:border-primary/50',
-              'transition-all duration-500',
-            ],
-            sizes[size]
-          )}
-        >
-        {/* Inner glow */}
-        {withEffects && (
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        )}
-
         {/* Logo image */}
         <img
           src={logoSrc}
           alt="Blocki Logo"
           className={cn(
-            'w-full h-full object-contain p-1',
-            withEffects && 'group-hover:brightness-110 transition-all duration-500'
+            'object-contain',
+            sizes[size],
+            withEffects && [
+              'group-hover:scale-110',
+              'group-hover:brightness-110',
+              'transition-all duration-500',
+              'drop-shadow-lg',
+              'group-hover:drop-shadow-2xl',
+            ]
           )}
         />
 
-        {/* Shine effect */}
+        {/* Shine effect on hover */}
         {withEffects && (
-          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 pointer-events-none" />
         )}
-      </div>
-
-      {/* Outer glow pulse */}
-      {withEffects && (
-        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/20 to-secondary/20 blur-md animate-pulse" style={{ animationDuration: '3s' }} />
-      )}
       </div>
     </div>
   )
@@ -98,15 +69,23 @@ export function Logo({ size = 'default', withEffects = false, className }) {
  * LogoWithText Component
  * Logo with the Blocki text next to it
  */
-export function LogoWithText({ size = 'default', withEffects = false }) {
+export function LogoWithText({ size = 'sm', withEffects = false }) {
   const textSizes = {
+    xs: 'text-lg',
     sm: 'text-xl',
     default: 'text-2xl',
     lg: 'text-4xl',
   }
 
+  const gapSizes = {
+    xs: 'gap-2',
+    sm: 'gap-3',
+    default: 'gap-3',
+    lg: 'gap-4',
+  }
+
   return (
-    <div className="flex items-center gap-3">
+    <div className={cn('flex items-center', gapSizes[size])}>
       <Logo size={size} withEffects={withEffects} />
       <span className={cn('font-bold', textSizes[size])}>Blocki</span>
     </div>

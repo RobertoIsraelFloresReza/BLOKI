@@ -19,5 +19,9 @@ export {
   DialogClose,
 } from './dialog'
 export { ThemeToggle } from './theme-toggle'
+export { LanguageSwitcher } from './language-switcher'
 export { Logo, LogoWithText } from './logo'
-export { Loader3D } from './loader'
+export { Loader3D, LoaderButton } from './loader'
+export { Tabs, TabsList, TabsTrigger, TabsContent } from './tabs'
+export { ScrollReveal, ScrollRevealItem } from './scroll-reveal'
+export { AnimatedText, AnimatedTextByWord } from './animated-text'

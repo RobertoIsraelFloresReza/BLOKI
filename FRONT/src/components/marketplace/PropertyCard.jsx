@@ -10,6 +10,7 @@ import {
   Button,
   Badge,
 } from '@/components/ui'
+import { useStrings } from '@/utils/localizations/useStrings'
 
 /**
  * PropertyCard Component
@@ -17,29 +18,30 @@ import {
  * Optimized for real estate tokenization
  * Features 3D tilt effect on hover for inspection feel
  */
-export function PropertyCard({ property }) {
+export function PropertyCard({ property, onViewDetails }) {
   const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 })
   const cardRef = useRef(null)
-  const {
-    id,
-    title,
-    location,
-    image,
-    price,
-    bedrooms,
-    bathrooms,
-    area,
-    tokensAvailable,
-    totalTokens,
-    roi,
-    verified,
-    category,
-  } = property
+  const Strings = useStrings()
+
+  // Normalize backend data (support both old and new schema)
+  const id = property.id
+  const title = property.name || property.title
+  const location = property.address || property.location
+  const image = property.images?.[0] || property.image || '/blocki_general.jpg'
+  const price = property.valuation || property.price
+  const bedrooms = property.metadata?.bedrooms || property.bedrooms
+  const bathrooms = property.metadata?.bathrooms || property.bathrooms
+  const area = property.metadata?.area || property.area
+  const totalTokens = property.totalSupply || property.totalTokens
+  const tokensAvailable = property.availableTokens || property.tokensAvailable || totalTokens
+  const roi = property.roi || 0
+  const verified = property.verified !== undefined ? property.verified : true
+  const category = property.metadata?.category || property.category || 'houses'
 
   const availableTokens = tokensAvailable || 0
   const pricePerToken = price && totalTokens ? Math.round(price / totalTokens) : 100
-  const type = category || 'house'
-  const status = tokensAvailable === 0 ? 'sold-out' : 'available'
+  const type = category
+  const status = tokensAvailable === 0 ? 'sold-out' : 'active'
 
   // Safe calculation with fallback
   const tokensSoldPercentage = totalTokens && totalTokens > 0
@@ -129,11 +131,11 @@ export function PropertyCard({ property }) {
             {status === 'available' && (
               <>
                 <TrendingUp className="w-3 h-3 mr-1" />
-                Available
+                {Strings.available}
               </>
             )}
-            {status === 'sold-out' && 'Sold Out'}
-            {status === 'coming-soon' && 'Coming Soon'}
+            {status === 'sold-out' && Strings.soldOut}
+            {status === 'coming-soon' && Strings.comingSoon}
           </Badge>
         </div>
 
@@ -170,63 +172,45 @@ export function PropertyCard({ property }) {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Valuation and ROI */}
-        <div className="flex items-end justify-between">
-          <div>
-            <p className="text-xs text-muted-foreground">Property Valuation</p>
+        {/* Valuation in USDC */}
+        <div>
+          <p className="text-xs text-muted-foreground mb-1">{Strings.propertyValuation}</p>
+          <div className="flex items-baseline gap-2">
             <p className="text-2xl font-bold text-foreground">
               ${price?.toLocaleString('en-US') || '0'}
             </p>
+            <span className="text-sm font-medium text-muted-foreground">USDC</span>
           </div>
-          {roi && (
-            <div className="text-right">
-              <p className="text-xs text-muted-foreground">Est. ROI</p>
-              <p className="text-lg font-bold text-secondary">
-                {roi}%
-              </p>
-            </div>
-          )}
         </div>
 
         {/* Property Details */}
-        {(bedrooms || bathrooms || area) && (
+        {area && (
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            {bedrooms > 0 && (
-              <div className="flex items-center gap-1">
-                <BedDouble className="w-4 h-4" />
-                <span>{bedrooms}</span>
-              </div>
-            )}
-            {bathrooms > 0 && (
-              <div className="flex items-center gap-1">
-                <Bath className="w-4 h-4" />
-                <span>{bathrooms}</span>
-              </div>
-            )}
-            {area && (
-              <div className="flex items-center gap-1">
-                <Maximize className="w-4 h-4" />
-                <span>{area?.toLocaleString() || area} sqft</span>
-              </div>
-            )}
+            <div className="flex items-center gap-1">
+              <Maximize className="w-4 h-4" />
+              <span>{area?.toLocaleString() || area} {Strings.sqft}</span>
+            </div>
           </div>
         )}
 
         {/* Token Info */}
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <p className="text-xs text-muted-foreground">Total Tokens</p>
+            <p className="text-xs text-muted-foreground">{Strings.totalTokens}</p>
             <p className="text-sm font-semibold">{totalTokens?.toLocaleString() || '0'}</p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Available</p>
+            <p className="text-xs text-muted-foreground">{Strings.available}</p>
             <p className="text-sm font-semibold text-secondary">
               {availableTokens?.toLocaleString() || '0'}
             </p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Price/Token</p>
-            <p className="text-sm font-semibold">${pricePerToken || '0'}</p>
+            <p className="text-xs text-muted-foreground">{Strings.pricePerToken}</p>
+            <div className="flex items-baseline gap-1">
+              <p className="text-sm font-semibold">${pricePerToken || '0'}</p>
+              <span className="text-[10px] text-muted-foreground">USDC</span>
+            </div>
           </div>
         </div>
 
@@ -235,7 +219,7 @@ export function PropertyCard({ property }) {
           <div className="flex items-center gap-2 p-3 rounded-lg bg-accent/30">
             <Users className="w-4 h-4 text-muted-foreground" />
             <span className="text-xs text-muted-foreground">
-              {Math.round(tokensSoldPercentage)}% funded by investors
+              {Math.round(tokensSoldPercentage)}% {Strings.fundedByInvestors}
             </span>
           </div>
         )}
@@ -246,10 +230,11 @@ export function PropertyCard({ property }) {
           className="w-full"
           size="lg"
           disabled={status !== 'available'}
+          onClick={() => status === 'available' && onViewDetails && onViewDetails(property)}
         >
-          {status === 'available' && 'View Details'}
-          {status === 'sold-out' && 'Sold Out'}
-          {status === 'coming-soon' && 'Coming Soon'}
+          {status === 'available' && Strings.viewDetails}
+          {status === 'sold-out' && Strings.soldOut}
+          {status === 'coming-soon' && Strings.comingSoon}
         </Button>
       </CardFooter>
     </Card>

@@ -16,3 +16,20 @@ export function Loader3D({ className }) {
     />
   )
 }
+
+/**
+ * LoaderButton Component
+ * Small loader for buttons
+ * Size: 16px
+ * Uses currentColor to inherit button text color
+ */
+export function LoaderButton({ className }) {
+  return (
+    <span
+      className={cn(
+        'loader-sm',
+        className
+      )}
+    />
+  )
+}

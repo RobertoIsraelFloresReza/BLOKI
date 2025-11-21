@@ -19,11 +19,11 @@ export function FiltersTabs({
   return (
     <div className={cn("relative", className)}>
       {/* Gradient overlays for scroll indication */}
-      <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-background to-transparent pointer-events-none z-10" />
+      <div className="absolute left-0 top-0 bottom-0 w-8 pointer-events-none z-10 " />
       <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent pointer-events-none z-10" />
 
       {/* Scrollable container */}
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 px-1">
+      <div className="flex gap-4 overflow-x-auto scrollbar-hide p-4 justify-center">
         {filters.map((filter) => (
           <button
             key={filter.id}
@@ -34,7 +34,7 @@ export function FiltersTabs({
               "min-w-fit shrink-0",
               "hover:scale-105 active:scale-95",
               selectedFilter === filter.id
-                ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
+                ? "bg-gradient-to-tr from-primary to-primary dark:from-primary/80 dark:to-transparent text-primary-foreground shadow-lg shadow-primary/20"
                 : "bg-card text-foreground border border-border hover:border-primary/50 hover:bg-accent"
             )}
             aria-pressed={selectedFilter === filter.id}

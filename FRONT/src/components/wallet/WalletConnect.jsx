@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Wallet, Check, AlertCircle, ExternalLink } from 'lucide-react'
 import { Button, Card, CardHeader, CardTitle, CardDescription, CardContent, Badge, Loader3D } from '@/components/ui'
+import { useStrings } from '@/utils/localizations/useStrings'
 
 /**
  * WalletConnect Component
@@ -12,6 +13,7 @@ export function WalletConnect() {
   const [isConnected, setIsConnected] = useState(false)
   const [walletAddress, setWalletAddress] = useState(null)
   const [error, setError] = useState(null)
+  const Strings = useStrings()
 
   const connectWallet = async () => {
     setIsConnecting(true)
@@ -54,16 +56,16 @@ export function WalletConnect() {
           <div>
             <CardTitle className="flex items-center gap-2">
               <Wallet className="w-5 h-5" />
-              Stellar Wallet
+              {Strings.stellarWallet}
             </CardTitle>
             <CardDescription className="mt-1">
-              {isConnected ? 'Connected to Freighter' : 'Connect your Freighter wallet'}
+              {isConnected ? Strings.connectedToFreighter : Strings.connectYourWallet}
             </CardDescription>
           </div>
           {isConnected && (
             <Badge variant="secondary" className="gap-1">
               <Check className="w-3 h-3" />
-              Connected
+              {Strings.connected}
             </Badge>
           )}
         </div>
@@ -73,7 +75,7 @@ export function WalletConnect() {
         {/* Connection Status */}
         {isConnected && walletAddress && (
           <div className="p-4 rounded-lg bg-accent/50 border border-border">
-            <p className="text-xs text-muted-foreground mb-1">Your Address</p>
+            <p className="text-xs text-muted-foreground mb-1">{Strings.yourAddress}</p>
             <div className="flex items-center justify-between gap-2">
               <code className="text-sm font-mono text-foreground">
                 {truncateAddress(walletAddress)}
@@ -96,7 +98,7 @@ export function WalletConnect() {
             <div className="flex gap-2">
               <AlertCircle className="w-4 h-4 text-destructive mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-destructive">Connection Failed</p>
+                <p className="text-sm font-medium text-destructive">{Strings.connectionFailed}</p>
                 <p className="text-xs text-destructive/80 mt-1">{error}</p>
                 {error.includes('not installed') && (
                   <a
@@ -105,7 +107,7 @@ export function WalletConnect() {
                     rel="noopener noreferrer"
                     className="text-xs text-primary hover:underline mt-2 inline-flex items-center gap-1"
                   >
-                    Install Freighter
+                    {Strings.installFreighter}
                     <ExternalLink className="w-3 h-3" />
                   </a>
                 )}
@@ -125,12 +127,12 @@ export function WalletConnect() {
             {isConnecting ? (
               <>
                 <Loader3D />
-                Connecting...
+                {Strings.connecting}
               </>
             ) : (
               <>
                 <Wallet className="w-4 h-4" />
-                Connect Wallet
+                {Strings.connectWallet}
               </>
             )}
           </Button>
@@ -141,13 +143,13 @@ export function WalletConnect() {
             className="w-full"
             size="lg"
           >
-            Disconnect
+            {Strings.disconnect}
           </Button>
         )}
 
         {/* Info */}
         <p className="text-xs text-muted-foreground text-center">
-          Make sure you have Freighter wallet installed to interact with properties
+          {Strings.walletInfo}
         </p>
       </CardContent>
     </Card>

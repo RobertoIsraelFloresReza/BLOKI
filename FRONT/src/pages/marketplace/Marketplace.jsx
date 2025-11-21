@@ -1,8 +1,12 @@
-import { useState } from 'react'
-import { Home, Building2, Hotel, Warehouse, TrendingUp } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { Home, Building2, Hotel, Warehouse, TrendingUp, Search, X } from 'lucide-react'
 import { SearchBar } from '@/components/marketplace/SearchBar'
 import { FiltersTabs } from '@/components/marketplace/FiltersTabs'
 import { PropertyCard } from '@/components/marketplace/PropertyCard'
+import { PropertyDetails } from '@/pages/property'
+import { ScrollReveal, ScrollRevealItem, AnimatedText, Spinner } from '@/components/ui'
+import { useStrings } from '@/utils/localizations/useStrings'
+import { useProperties } from '@/hooks'
 
 /**
  * Marketplace Page
@@ -11,42 +15,37 @@ import { PropertyCard } from '@/components/marketplace/PropertyCard'
  * Follows Nielsen's heuristics and Cupertino design
  */
 
-// Mock data - Property categories
-const PROPERTY_FILTERS = [
+// Property categories (counts will be dynamic from backend)
+const getPropertyFilters = (Strings) => [
   {
     id: 'all',
-    name: 'Todas',
+    name: Strings.all,
     icon: <TrendingUp className="w-5 h-5" />,
-    count: 12
   },
   {
     id: 'houses',
-    name: 'Casas',
+    name: Strings.houses,
     icon: <Home className="w-5 h-5" />,
-    count: 5
   },
   {
     id: 'apartments',
-    name: 'Apartamentos',
+    name: Strings.apartments,
     icon: <Building2 className="w-5 h-5" />,
-    count: 4
   },
   {
     id: 'hotels',
-    name: 'Hoteles',
+    name: Strings.hotels,
     icon: <Hotel className="w-5 h-5" />,
-    count: 2
   },
   {
     id: 'commercial',
-    name: 'Comercial',
+    name: Strings.commercial,
     icon: <Warehouse className="w-5 h-5" />,
-    count: 1
   }
 ]
 
-// Mock data - Properties
-const MOCK_PROPERTIES = [
+// Mock data only for DEMO purposes - will be removed after backend is populated
+const DEMO_PROPERTIES = [
   {
     id: '1',
     title: 'Casa Moderna en Miami Beach',
@@ -229,90 +228,244 @@ const MOCK_PROPERTIES = [
   }
 ]
 
-export function Marketplace() {
+export function Marketplace({ user, onFiltersChange, isScrolled, showMobileSearch, onCloseMobileSearch }) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useState('all')
+  const [selectedProperty, setSelectedProperty] = useState(null)
+  const Strings = useStrings()
 
-  // Filter properties based on search and category
-  const filteredProperties = MOCK_PROPERTIES.filter(property => {
+  // ALWAYS use real backend data
+  const { properties, isLoading, error } = useProperties({
+    // No filters - get ALL properties from backend
+    page: 1,
+    limit: 100,
+  })
+
+  // Use real properties from backend (fallback to empty array if loading/error)
+  const allProperties = properties || []
+
+  // DEBUG: Log properties to console
+  useEffect(() => {
+    console.log('🔍 DEBUG Marketplace - Properties:', properties)
+    console.log('🔍 DEBUG Marketplace - isLoading:', isLoading)
+    console.log('🔍 DEBUG Marketplace - error:', error)
+    console.log('🔍 DEBUG Marketplace - allProperties:', allProperties)
+  }, [properties, isLoading, error, allProperties])
+
+  // Pass filters to parent (App) so Navbar can display them
+  useEffect(() => {
+    if (onFiltersChange) {
+      onFiltersChange({
+        filters: getPropertyFilters(Strings),
+        selectedFilter,
+        onFilterChange: setSelectedFilter
+      })
+    }
+  }, [selectedFilter, Strings, onFiltersChange])
+
+  // If a property is selected, show PropertyDetails
+  if (selectedProperty) {
+    return (
+      <PropertyDetails
+        property={selectedProperty}
+        onBack={() => setSelectedProperty(null)}
+        user={user}
+      />
+    )
+  }
+
+  // Filter properties on client side
+  const filteredProperties = allProperties.filter(property => {
+    // Normalize property data (backend might use different field names)
+    const propertyCategory = property.metadata?.category || property.category
+    const propertyName = property.name || property.title
+    const propertyLocation = property.address || property.location
+
     // Filter by category
-    const matchesCategory = selectedFilter === 'all' || property.category === selectedFilter
+    const matchesCategory = selectedFilter === 'all' || propertyCategory === selectedFilter
 
-    // Filter by search query (title or location)
+    // Filter by search query
     const matchesSearch =
       searchQuery === '' ||
-      property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      property.location.toLowerCase().includes(searchQuery.toLowerCase())
+      propertyName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      propertyLocation?.toLowerCase().includes(searchQuery.toLowerCase())
 
     return matchesCategory && matchesSearch
   })
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Mobile Search Modal */}
+      {showMobileSearch && (
+        <div className="lg:hidden fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl animate-fadeIn">
+          <div className="h-full flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-4 border-b border-border">
+              <h2 className="text-xl font-bold">Buscar y Filtrar</h2>
+              <button
+                onClick={onCloseMobileSearch}
+                className="p-2 hover:bg-accent rounded-lg transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            {/* Search and Filters Content */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-6">
+              {/* Search Bar */}
+              <div>
+                <label className="text-sm font-medium mb-2 block">Buscar</label>
+                <SearchBar
+                  placeholder={Strings.searchPlaceholder}
+                  value={searchQuery}
+                  onChange={setSearchQuery}
+                />
+              </div>
+
+              {/* Categories */}
+              <div>
+                <label className="text-sm font-medium mb-3 block">Categorías</label>
+                <FiltersTabs
+                  filters={getPropertyFilters(Strings)}
+                  selectedFilter={selectedFilter}
+                  onFilterChange={setSelectedFilter}
+                />
+              </div>
+            </div>
+
+            {/* Apply Button */}
+            <div className="p-4 border-t border-border">
+              <button
+                onClick={onCloseMobileSearch}
+                className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 transition-colors"
+              >
+                Aplicar ({filteredProperties.length} propiedades)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header Section */}
-      <div className="bg-gradient-to-b from-accent/30 to-transparent border-b border-border">
+      <div className="">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {/* Title */}
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-foreground mb-3">
-              Marketplace de Propiedades
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 font-open-sans text-foreground leading-tight">
+              <AnimatedText
+                text="La Nueva Inversión Inmobiliaria"
+                type="wave"
+                delay={0}
+              />
             </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Invierte en propiedades tokenizadas en la blockchain de Stellar.
-              Diversifica tu portafolio con fracciones de bienes raíces premium.
-            </p>
+            <ScrollReveal delay={0.6} duration={0.6}>
+              <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto font-open-sans">
+                Diversifica y obtén ingresos pasivos de bienes raíces—en Stellar
+              </p>
+            </ScrollReveal>
           </div>
 
-          {/* Search Bar */}
-          <div className="max-w-2xl mx-auto mb-8">
-            <SearchBar
-              placeholder="Buscar propiedades, ubicaciones..."
-              value={searchQuery}
-              onChange={setSearchQuery}
-            />
-          </div>
+          {/* Search Bar - Desktop Only */}
+          <ScrollReveal delay={0.2} duration={0.6}>
+            <div className="hidden lg:block max-w-2xl mx-auto mb-8">
+              <SearchBar
+                placeholder={Strings.searchPlaceholder}
+                value={searchQuery}
+                onChange={setSearchQuery}
+              />
+            </div>
+          </ScrollReveal>
 
-          {/* Filter Tabs */}
+          {/* Filter Tabs - Mobile Only (in header as shortcut) */}
+          <ScrollReveal delay={0.4} duration={0.6}>
+            <div className="lg:hidden">
+              <FiltersTabs
+                filters={getPropertyFilters(Strings)}
+                selectedFilter={selectedFilter}
+                onFilterChange={setSelectedFilter}
+              />
+            </div>
+          </ScrollReveal>
+        </div>
+      </div>
+
+      {/* Sticky Filter Tabs - Desktop Only (hidden when scrolled, shown in navbar) */}
+      <div className={`hidden lg:block sticky top-0 z-40 w-full bg-background/95 backdrop-blur-xl border-b border-border/50 rounded-b-2xl transition-opacity duration-300 ${
+        isScrolled ? 'opacity-0 pointer-events-none' : 'opacity-100'
+      }`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <FiltersTabs
-            filters={PROPERTY_FILTERS}
+            filters={getPropertyFilters(Strings)}
             selectedFilter={selectedFilter}
             onFilterChange={setSelectedFilter}
           />
         </div>
       </div>
 
-      {/* Properties Grid */}
+      {/* Properties Grid Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Results Count */}
-        <div className="mb-6">
-          <p className="text-sm text-muted-foreground">
-            {filteredProperties.length === 0
-              ? 'No se encontraron propiedades'
-              : `${filteredProperties.length} ${filteredProperties.length === 1 ? 'propiedad encontrada' : 'propiedades encontradas'}`
-            }
-          </p>
-        </div>
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex justify-center items-center py-20">
+            <Spinner size="lg" />
+            <span className="ml-3 text-muted-foreground">Cargando propiedades...</span>
+          </div>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <div className="text-center py-20">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-destructive/10 mb-4">
+              <Home className="w-8 h-8 text-destructive" />
+            </div>
+            <h3 className="text-xl font-semibold text-foreground mb-2">
+              Error al cargar propiedades
+            </h3>
+            <p className="text-muted-foreground max-w-sm mx-auto mb-4">
+              No se pudieron cargar las propiedades. Por favor intenta nuevamente.
+            </p>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
+            >
+              Recargar
+            </button>
+          </div>
+        )}
 
         {/* Properties Grid */}
-        {filteredProperties.length > 0 ? (
+        {!isLoading && !error && filteredProperties.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredProperties.map(property => (
-              <PropertyCard key={property.id} property={property} />
+            {filteredProperties.map((property, index) => (
+              <ScrollRevealItem
+                key={property.id}
+                index={index}
+                staggerDelay={0.1}
+                duration={0.6}
+                distance={60}
+              >
+                <PropertyCard
+                  property={property}
+                  onViewDetails={setSelectedProperty}
+                />
+              </ScrollRevealItem>
             ))}
           </div>
-        ) : (
-          /* Empty State */
+        )}
+
+        {/* Empty State */}
+        {!isLoading && !error && filteredProperties.length === 0 && (
           <div className="text-center py-20">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
               <Home className="w-8 h-8 text-muted-foreground" />
             </div>
             <h3 className="text-xl font-semibold text-foreground mb-2">
-              No hay propiedades disponibles
+              {Strings.noPropertiesFound}
             </h3>
             <p className="text-muted-foreground max-w-sm mx-auto">
               {searchQuery
-                ? 'Intenta con otros términos de búsqueda o cambia los filtros.'
-                : 'No hay propiedades que coincidan con tus criterios de búsqueda.'
+                ? Strings.tryOtherSearch
+                : Strings.noPropertiesMessage
               }
             </p>
           </div>
