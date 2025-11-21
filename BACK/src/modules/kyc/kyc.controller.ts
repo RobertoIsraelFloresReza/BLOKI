@@ -27,8 +27,14 @@ export class KYCController {
     description: 'Crea una nueva sesión de verificación KYC y devuelve la URL para que el usuario la complete',
   })
   async startKYC(@Body() startKycDto: StartKYCDTO) {
+    this.logger.log(`Request body recibido: ${JSON.stringify(startKycDto)}`);
     this.logger.log(`Iniciando KYC para usuario: ${startKycDto.userId}`);
-    return this.kycService.startKYCVerification(startKycDto);
+    try {
+      return await this.kycService.startKYCVerification(startKycDto);
+    } catch (error) {
+      this.logger.error(`Error en startKYC controller: ${error.message}`);
+      throw error;
+    }
   }
 
   @Get('status/:userId')

@@ -64,8 +64,15 @@ export class AuthController {
   async googleAuthRedirect(@Request() req, @Res() res: Response) {
     const result = await this.authService.googleLogin(req.user);
 
+    // Detect origin: if request comes from localhost, redirect to localhost
+    const referer = req.headers.referer || req.headers.origin || '';
+    const isLocalhost = referer.includes('localhost') || referer.includes('127.0.0.1');
+
     // Redirect to frontend with token
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = isLocalhost
+      ? 'http://localhost:5173'
+      : (process.env.FRONTEND_URL || 'https://blocki.tech');
+
     res.redirect(`${frontendUrl}/auth/callback?token=${result.access_token}`);
   }
 }

@@ -44,6 +44,7 @@ export class KYCService {
    * @returns Información de sesión y URL de verificación
    */
   async startKYCVerification(startKycDto: StartKYCDTO) {
+    this.logger.log(`Datos recibidos para KYC: ${JSON.stringify(startKycDto)}`);
     const { userId, level, country, redirectUrl } = startKycDto;
 
     // Validar que el usuario exista
@@ -78,8 +79,8 @@ export class KYCService {
       const externalResponse = await this.createKYCSessionWithProvider({
         sessionId,
         email: user.email,
-        firstName: user.name,
-        lastName: user.lastName,
+        firstName: user.name || 'Usuario',
+        lastName: user.lastName || 'Apellido',
         ...verificationData,
       });
 
@@ -110,8 +111,14 @@ export class KYCService {
         status: 'pending',
       };
     } catch (error) {
-      this.logger.error(`Error al iniciar KYC: ${error.message}`);
-      throw new BadRequestException('Error al iniciar proceso de verificación KYC');
+      this.logger.error(`Error al iniciar KYC: ${error.message}`, error.stack);
+
+      // Proporcionar mensaje más específico si es un error conocido
+      if (error instanceof NotFoundException || error instanceof BadRequestException) {
+        throw error;
+      }
+
+      throw new BadRequestException(`Error al iniciar proceso de verificación KYC: ${error.message}`);
     }
   }
 
