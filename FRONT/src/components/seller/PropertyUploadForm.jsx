@@ -106,9 +106,12 @@ export function PropertyUploadForm({ onBack, onSuccess, user, initialProperty = 
     if (!formData.price || parseFloat(formData.price) <= 0) newErrors.price = 'Valid price is required'
     if (!formData.area || parseFloat(formData.area) <= 0) newErrors.area = 'Valid area is required'
     if (!formData.totalTokens || parseInt(formData.totalTokens) <= 0) newErrors.totalTokens = 'Valid token amount is required'
-    if (!formData.adminSecretKey || !formData.adminSecretKey.startsWith('S')) {
-      newErrors.adminSecretKey = 'Valid Stellar secret key is required (starts with S)'
+
+    // Admin Secret Key is now OPTIONAL - only validate if provided
+    if (formData.adminSecretKey && !formData.adminSecretKey.startsWith('S')) {
+      newErrors.adminSecretKey = 'Invalid Stellar secret key format (must start with S)'
     }
+
     if (uploadedImages.length === 0) newErrors.images = 'At least one image is required'
 
     setErrors(newErrors)
@@ -154,7 +157,6 @@ export function PropertyUploadForm({ onBack, onSuccess, user, initialProperty = 
           valuation: parseFloat(formData.price),
           totalSupply: parseInt(formData.totalTokens),
           legalOwner: formData.legalOwner || user?.name || 'Owner',
-          adminSecretKey: formData.adminSecretKey, // REQUIRED: Stellar secret key for deployment
           category: formData.category,
           metadata: {
             bedrooms: parseInt(formData.bedrooms) || 0,
@@ -162,6 +164,18 @@ export function PropertyUploadForm({ onBack, onSuccess, user, initialProperty = 
             area: parseFloat(formData.area),
           },
         }
+
+        // Only include adminSecretKey if provided
+        if (formData.adminSecretKey) {
+          payload.adminSecretKey = formData.adminSecretKey
+        } else {
+          // Show warning toast if secret key not provided
+          toast('⚠️ Property will be created without blockchain deployment. Add secret key later to enable tokenization.', {
+            duration: 5000,
+            icon: '⚠️',
+          })
+        }
+
         console.log('🔍 DEBUG PropertyUploadForm - Payload:', payload)
         const newProperty = await createProperty(payload)
         console.log('🔍 DEBUG PropertyUploadForm - Response:', newProperty)
@@ -176,7 +190,9 @@ export function PropertyUploadForm({ onBack, onSuccess, user, initialProperty = 
         })
       }
 
-      // Show success
+      // Success toasts are already handled by useProperties hook
+
+      // Show success screen
       const newProperty = {
         id: propertyId,
         title: formData.title,
@@ -208,7 +224,7 @@ export function PropertyUploadForm({ onBack, onSuccess, user, initialProperty = 
       }
     } catch (error) {
       console.error('Error submitting property:', error)
-      toast.error(isEditMode ? 'Error al actualizar propiedad' : 'Error al crear propiedad')
+      // Error toasts are already handled by useProperties hook
     }
   }
 
@@ -538,11 +554,11 @@ export function PropertyUploadForm({ onBack, onSuccess, user, initialProperty = 
                 </p>
               </div>
 
-              {/* Admin Secret Key */}
+              {/* Admin Secret Key - OPTIONAL */}
               <div>
                 <Label htmlFor="adminSecretKey">
-                  Stellar Admin Secret Key *
-                  <span className="text-xs text-muted-foreground ml-2">(Required for deployment)</span>
+                  Stellar Admin Secret Key
+                  <span className="text-xs text-muted-foreground ml-2">(Optional - for blockchain deployment)</span>
                 </Label>
                 <div className="relative">
                   <Input
@@ -550,7 +566,7 @@ export function PropertyUploadForm({ onBack, onSuccess, user, initialProperty = 
                     type={showSecretKey ? 'text' : 'password'}
                     value={formData.adminSecretKey}
                     onChange={(e) => handleInputChange('adminSecretKey', e.target.value)}
-                    placeholder="SABC..."
+                    placeholder="SABC... (leave empty to deploy later)"
                     className={errors.adminSecretKey ? 'border-destructive pr-10' : 'pr-10'}
                   />
                   <button
@@ -565,7 +581,7 @@ export function PropertyUploadForm({ onBack, onSuccess, user, initialProperty = 
                   <p className="text-sm text-destructive mt-1">{errors.adminSecretKey}</p>
                 )}
                 <p className="text-xs text-muted-foreground mt-2">
-                  Your Stellar secret key (obtained during registration). This is required to deploy the property smart contract.
+                  Your Stellar secret key enables blockchain deployment. You can leave this empty and add it later to enable tokenization features.
                 </p>
               </div>
 

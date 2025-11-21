@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Home, Search, Wallet, User, TrendingUp, LogOut, Store, X } from 'lucide-react'
 import { Badge, ThemeToggle, LanguageSwitcher, LogoWithText, Button } from '@/components/ui'
 import { WalletConnect } from '@/components/wallet'
@@ -12,10 +13,23 @@ import { useStrings } from '@/utils/localizations/useStrings'
  * Modern glassmorphism design
  */
 export function Navbar({ activeTab = 'marketplace', onTabChange, user, onLogout, showFilters = false, filters = [], selectedFilter = 'all', onFilterChange, onMobileSearchClick }) {
+  const navigate = useNavigate()
   const [showWalletModal, setShowWalletModal] = useState(false)
   const Strings = useStrings()
 
   const handleTabChange = (tabId) => {
+    // Mapeo de tabs a rutas
+    const routes = {
+      'marketplace': '/',
+      'seller': '/seller',
+      'wallet': '/wallet',
+      'profile': '/profile'
+    }
+
+    // Navegar a la ruta correspondiente
+    navigate(routes[tabId] || '/')
+
+    // Mantener compatibilidad con el callback
     if (onTabChange) {
       onTabChange(tabId)
     }
@@ -61,9 +75,12 @@ export function Navbar({ activeTab = 'marketplace', onTabChange, user, onLogout,
           <div className="px-6 py-4">
             <div className="flex items-center justify-between">
               {/* Logo */}
-              <div className="flex items-center gap-0">
+              <button
+                onClick={() => navigate('/')}
+                className="flex items-center gap-0 hover:opacity-80 transition-opacity"
+              >
                 <LogoWithText size="xs" />
-              </div>
+              </button>
 
               {/* Navigation Links */}
               <div className="flex items-center gap-2">
@@ -185,7 +202,12 @@ export function Navbar({ activeTab = 'marketplace', onTabChange, user, onLogout,
       <div className="lg:hidden sticky top-0 z-40 bg-card/80 backdrop-blur-xl border-b border-border">
         <div className="px-4 py-3">
           <div className="flex items-center justify-between">
-            <LogoWithText size="xs" />
+            <button
+              onClick={() => navigate('/')}
+              className="hover:opacity-80 transition-opacity"
+            >
+              <LogoWithText size="xs" />
+            </button>
             <div className="flex items-center gap-2">
               {/* Search Icon - Only on Marketplace */}
               {activeTab === 'marketplace' && (

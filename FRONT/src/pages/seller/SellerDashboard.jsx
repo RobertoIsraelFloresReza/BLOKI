@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Plus, Home, DollarSign, Users, CheckCircle, Clock, XCircle } from 'lucide-react'
-import { Button, Card, CardContent, Badge } from '@/components/ui'
+import { Button, Card, CardContent, Badge, Spinner } from '@/components/ui'
 import { PropertyUploadForm } from '@/components/seller/PropertyUploadForm'
 import { PropertyCard } from '@/components/marketplace/PropertyCard'
 import { PropertyDetails } from '@/pages/property/PropertyDetails'
 import { useStrings } from '@/utils/localizations/useStrings'
+import { useProperties } from '@/hooks'
+import toast from 'react-hot-toast'
 
 /**
  * Seller Dashboard Page (Propiedades)
@@ -13,79 +15,55 @@ import { useStrings } from '@/utils/localizations/useStrings'
  * Follows Marketplace design patterns
  */
 
-// Mock data - Seller's properties
-const MOCK_SELLER_PROPERTIES = [
-  {
-    id: '1',
-    title: 'Casa Moderna en Miami Beach',
-    location: 'Miami Beach, FL',
-    price: 2500000,
-    image: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80',
-    category: 'houses',
-    area: 3200,
-    tokensAvailable: 1000,
-    totalTokens: 2500,
-    tokensSold: 1500,
-    status: 'active',
-    createdAt: '2024-01-15',
-    revenue: 1500000,
-    investors: 245
-  },
-  {
-    id: '2',
-    title: 'Apartamento Luxury en Manhattan',
-    location: 'Manhattan, NY',
-    price: 1800000,
-    image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80',
-    category: 'apartments',
-    area: 1800,
-    tokensAvailable: 500,
-    totalTokens: 1800,
-    tokensSold: 1300,
-    status: 'active',
-    createdAt: '2024-02-10',
-    revenue: 1300000,
-    investors: 180
-  },
-  {
-    id: '3',
-    title: 'Villa Colonial en Cartagena',
-    location: 'Cartagena, Colombia',
-    price: 3200000,
-    image: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80',
-    category: 'houses',
-    area: 5500,
-    tokensAvailable: 2000,
-    totalTokens: 3200,
-    tokensSold: 1200,
-    status: 'pending',
-    createdAt: '2024-03-01',
-    revenue: 1200000,
-    investors: 95
-  },
-]
-
 export function SellerDashboard({ user }) {
   const [showUploadForm, setShowUploadForm] = useState(false)
-  const [properties, setProperties] = useState(MOCK_SELLER_PROPERTIES)
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [selectedProperty, setSelectedProperty] = useState(null)
   const Strings = useStrings()
 
-  // Calculate statistics
-  const totalProperties = properties.length
-  const totalRevenue = properties.reduce((sum, prop) => sum + prop.revenue, 0)
-  const totalInvestors = properties.reduce((sum, prop) => sum + prop.investors, 0)
-  const activeProperties = properties.filter(p => p.status === 'active').length
+  // Fetch user's properties from backend
+  const { properties: allProperties, isLoading, error } = useProperties()
+
+  // Filter properties to show only current user's properties
+  // Backend should ideally have a filter by userId, but for now we filter client-side
+  const userProperties = allProperties.filter(property => {
+    // Match by user ID or legal owner
+    return property.userId === user?.id ||
+           property.legalOwner === user?.name ||
+           property.legalOwner === user?.email
+  })
+
+  console.log('🔍 DEBUG SellerDashboard - User:', user)
+  console.log('🔍 DEBUG SellerDashboard - All properties:', allProperties)
+  console.log('🔍 DEBUG SellerDashboard - User properties:', userProperties)
+
+  // Calculate statistics from user's properties
+  const totalProperties = userProperties.length
+
+  // Calculate revenue: sum of (tokensSold * price / totalTokens) for each property
+  const totalRevenue = userProperties.reduce((sum, prop) => {
+    const tokensSold = (prop.totalSupply || prop.totalTokens || 0) - (prop.availableTokens || prop.tokensAvailable || 0)
+    const pricePerToken = (prop.valuation || prop.price || 0) / (prop.totalSupply || prop.totalTokens || 1)
+    return sum + (tokensSold * pricePerToken)
+  }, 0)
+
+  // Total investors would need ownership data - for now use a placeholder
+  const totalInvestors = userProperties.reduce((sum, prop) => {
+    // This should come from ownership/transactions table
+    return sum + (prop.investors || 0)
+  }, 0)
+
+  const activeProperties = userProperties.filter(p => (p.status || 'active') === 'active').length
 
   // Filter properties by status
   const filteredProperties = selectedStatus === 'all'
-    ? properties
-    : properties.filter(p => p.status === selectedStatus)
+    ? userProperties
+    : userProperties.filter(p => (p.status || 'active') === selectedStatus)
 
   const handleUploadSuccess = (newProperty) => {
-    setProperties([newProperty, ...properties])
+    // Just close the form - the query will auto-refresh
     setShowUploadForm(false)
+    toast.success('Propiedad creada. Aparecerá en tu dashboard en unos momentos.')
   }
 
   // Status badges configuration
@@ -129,6 +107,40 @@ export function SellerDashboard({ user }) {
         onSuccess={handleUploadSuccess}
         user={user}
       />
+    )
+  }
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center pb-20">
+        <div className="text-center">
+          <Spinner size="lg" />
+          <p className="mt-4 text-muted-foreground">Cargando tus propiedades...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center pb-20">
+        <div className="text-center max-w-md mx-auto px-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-destructive/10 mb-4">
+            <Home className="w-8 h-8 text-destructive" />
+          </div>
+          <h3 className="text-xl font-semibold text-foreground mb-2">
+            Error al cargar propiedades
+          </h3>
+          <p className="text-muted-foreground mb-4">
+            {error?.message || 'No se pudieron cargar tus propiedades. Por favor intenta nuevamente.'}
+          </p>
+          <Button onClick={() => window.location.reload()}>
+            Recargar
+          </Button>
+        </div>
+      </div>
     )
   }
 
@@ -237,10 +249,10 @@ export function SellerDashboard({ user }) {
                 : 'text-muted-foreground hover:text-foreground hover:bg-accent'
             }`}
           >
-            {Strings.all || 'Todas'} ({properties.length})
+            {Strings.all || 'Todas'} ({userProperties.length})
           </button>
           {Object.entries(statusConfig).map(([status, config]) => {
-            const count = properties.filter(p => p.status === status).length
+            const count = userProperties.filter(p => (p.status || 'active') === status).length
             return (
               <button
                 key={status}

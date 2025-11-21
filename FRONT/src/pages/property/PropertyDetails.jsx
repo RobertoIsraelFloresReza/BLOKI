@@ -48,17 +48,18 @@ export function PropertyDetails({ property, onBack, user }) {
     )
   }
 
-  const {
-    title,
-    location,
-    price,
-    image,
-    category,
-    area,
-    tokensAvailable,
-    totalTokens,
-    verified,
-  } = property
+  // Normalize property data (backend schema vs frontend schema)
+  const title = property.name || property.title
+  const location = property.address || property.location
+  const price = property.valuation || property.price
+  const category = property.metadata?.category || property.category || 'houses'
+  const area = property.metadata?.area || property.area
+  const bedrooms = property.metadata?.bedrooms || property.bedrooms
+  const bathrooms = property.metadata?.bathrooms || property.bathrooms
+  const description = property.description || ''
+  const totalTokens = property.totalSupply || property.totalTokens || 0
+  const tokensAvailable = property.availableTokens || property.tokensAvailable || totalTokens
+  const verified = property.verified || false
 
   const pricePerToken = price && totalTokens ? Math.round(price / totalTokens) : 100
   const tokensSold = totalTokens - tokensAvailable
@@ -66,13 +67,18 @@ export function PropertyDetails({ property, onBack, user }) {
     ? ((tokensSold) / totalTokens) * 100
     : 0
 
-  // Mock images gallery
-  const images = [
-    image,
-    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
-    'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?w=800&q=80',
-    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800&q=80',
-  ]
+  // Use real images from property or fallback to placeholder
+  const propertyImages = property.images && property.images.length > 0
+    ? property.images
+    : [property.image || '/blocki_general.jpg']
+
+  const images = propertyImages.length > 0
+    ? propertyImages
+    : [
+        '/blocki_general.jpg',
+        'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800&q=80',
+        'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?w=800&q=80',
+      ]
 
   // Property features based on category
   const getPropertyFeatures = (category) => {
