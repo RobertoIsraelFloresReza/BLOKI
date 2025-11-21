@@ -5,6 +5,7 @@ import { CreateListingDto } from './dto/create-listing.dto';
 import { BuyTokensDto } from './dto/buy-tokens.dto';
 import { ListingStatus } from './entities/listing.entity';
 import { Pausable } from '../../common/decorators/pausable.decorator';
+import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('Marketplace')
 @Controller('marketplace')
@@ -26,6 +27,7 @@ export class MarketplaceController {
   }
 
   @Get('listings')
+  @Public()
   @ApiOperation({ summary: 'Obtener todos los listings' })
   @ApiQuery({ name: 'status', required: false, enum: ListingStatus })
   findAll(@Query('status') status?: ListingStatus) {
@@ -33,6 +35,7 @@ export class MarketplaceController {
   }
 
   @Get('listings/:id')
+  @Public()
   @ApiOperation({ summary: 'Obtener listing por ID' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.marketplaceService.findOne(id);
@@ -49,12 +52,14 @@ export class MarketplaceController {
   }
 
   @Get('stats')
+  @Public()
   @ApiOperation({ summary: 'Obtener estadísticas del marketplace' })
   getStats() {
     return this.marketplaceService.getMarketplaceStats();
   }
 
   @Get('transactions')
+  @Public()
   @ApiOperation({ summary: 'Obtener transacciones recientes del marketplace' })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   getTransactions(@Query('limit') limit?: number) {
@@ -62,6 +67,7 @@ export class MarketplaceController {
   }
 
   @Get('listings/:id/transactions')
+  @Public()
   @ApiOperation({ summary: 'Obtener transacciones de un listing con paginación' })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'offset', required: false, type: Number })

@@ -27,24 +27,26 @@ async function main() {
     prefix: '/uploads/',
   });
 
-  // Security: Helmet.js with CSP
+  // Security: Helmet.js with CSP (relaxed for OAuth and frontend)
   app.use(
     helmet({
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
           styleSrc: ["'self'", "'unsafe-inline'"],
-          scriptSrc: ["'self'"],
-          imgSrc: ["'self'", 'data:', 'https:'],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+          imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
+          connectSrc: ["'self'", 'https://accounts.google.com', 'https://*.stellar.org'],
+          frameSrc: ["'self'", 'https://accounts.google.com'],
         },
       },
-      crossOriginEmbedderPolicy: true,
-      crossOriginOpenerPolicy: true,
+      crossOriginEmbedderPolicy: false, // Disabled to prevent CORB issues
+      crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' }, // Allow OAuth popups
       crossOriginResourcePolicy: { policy: 'cross-origin' },
       dnsPrefetchControl: true,
-      frameguard: { action: 'deny' },
+      frameguard: { action: 'sameorigin' }, // Allow same origin frames for OAuth
       hidePoweredBy: true,
-      hsts: true,
+      hsts: process.env.NODE_ENV === 'production',
       ieNoOpen: true,
       noSniff: true,
       referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
@@ -90,10 +92,33 @@ async function main() {
   ];
 
   app.enableCors({
-    origin: corsOrigins,
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, Postman, etc.)
+      if (!origin) return callback(null, true);
+
+      // Check if origin is in allowed list
+      if (corsOrigins.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        console.warn(`CORS blocked origin: ${origin}`);
+        callback(null, false);
+      }
+    },
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'Accept',
+      'X-Requested-With',
+      'Origin',
+      'Access-Control-Request-Method',
+      'Access-Control-Request-Headers',
+    ],
+    exposedHeaders: ['Authorization', 'Content-Type'],
+    maxAge: 86400, // 24 hours
+    preflightContinue: false,
+    optionsSuccessStatus: 204,
   });
   app.useGlobalPipes(
     new ValidationPipe({

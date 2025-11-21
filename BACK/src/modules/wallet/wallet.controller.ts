@@ -2,7 +2,6 @@ import {
   Controller,
   Get,
   Query,
-  UseGuards,
   Request,
   ParseIntPipe,
 } from '@nestjs/common';
@@ -14,11 +13,9 @@ import {
   ApiQuery,
 } from '@nestjs/swagger';
 import { WalletService } from './wallet.service';
-import { AuthGuard } from '../auth/guard/auth.guard';
 
 @ApiTags('Wallet')
 @ApiBearerAuth()
-@UseGuards(AuthGuard)
 @Controller('wallet')
 export class WalletController {
   constructor(private readonly walletService: WalletService) {}

@@ -21,6 +21,7 @@ import { AdminModule } from './modules/admin/admin.module';
 import { EscrowModule } from './modules/escrow/escrow.module';
 import { RegistryModule } from './modules/registry/registry.module';
 import { PausableGuard } from './common/guards/pausable.guard';
+import { AuthGuard } from './modules/auth/guard/auth.guard';
 
 @Module({
   imports: [
@@ -48,6 +49,10 @@ import { PausableGuard } from './common/guards/pausable.guard';
     {
       provide: APP_INTERCEPTOR,
       useClass: LoggingInterceptor,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
     },
     {
       provide: APP_GUARD,

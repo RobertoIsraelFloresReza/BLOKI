@@ -5,14 +5,13 @@ import {
   BadRequestException,
   Body,
   Param,
-  UseGuards,
   Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { KYCService } from './kyc.service';
 import { StartKYCDTO } from './dto/start-kyc.dto';
 import { KYCWebhookDTO } from './dto/kyc-webhook.dto';
-import { AuthGuard } from '../auth/guard/auth.guard';
+import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('KYC - Verificación de Identidad')
 @Controller('kyc')
@@ -22,7 +21,6 @@ export class KYCController {
   constructor(private readonly kycService: KYCService) {}
 
   @Post('start')
-  @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Inicia el proceso de verificación KYC',
@@ -34,7 +32,6 @@ export class KYCController {
   }
 
   @Get('status/:userId')
-  @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Obtiene el estado actual de KYC del usuario',
@@ -49,6 +46,7 @@ export class KYCController {
   }
 
   @Post('webhook')
+  @Public()
   @ApiOperation({
     summary: 'Webhook del proveedor KYC',
     description: 'Endpoint que el proveedor KYC usa para enviar resultados de verificación',
@@ -60,7 +58,6 @@ export class KYCController {
   }
 
   @Post('retry/:userId')
-  @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Reinicia el proceso KYC',
@@ -75,7 +72,6 @@ export class KYCController {
   }
 
   @Get('transaction-limit/:userId')
-  @UseGuards(AuthGuard)
   @ApiBearerAuth()
   @ApiOperation({
     summary: 'Obtiene el límite de transacciones del usuario',

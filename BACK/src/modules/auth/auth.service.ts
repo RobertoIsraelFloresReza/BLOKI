@@ -172,4 +172,57 @@ export class AuthService {
       message: 'Logout successful',
     };
   }
+
+  async googleLogin(googleUser: any) {
+    // Check if user exists
+    let user = await this.userService.findByEmail(googleUser.email);
+
+    // If user doesn't exist, create a new one
+    if (!user) {
+      // Generate Stellar wallet keypair
+      const stellarKeypair = this.stellarService.generateKeypair();
+
+      // Encrypt the secret key before storing
+      const encryptedSecretKey = this.encryptSecretKey(stellarKeypair.secretKey);
+
+      user = await this.userService.create({
+        name: googleUser.firstName,
+        lastName: googleUser.lastName || googleUser.firstName,
+        email: googleUser.email,
+        password: crypto.randomBytes(32).toString('hex'), // Random password for OAuth users
+        stellarPublicKey: stellarKeypair.publicKey,
+        siteId: 1,
+      });
+
+      // Fund account on testnet
+      if (process.env.STELLAR_NETWORK === 'testnet') {
+        try {
+          await this.stellarService.fundAccount(stellarKeypair.publicKey);
+        } catch (error) {
+          console.warn('Failed to fund account with Friendbot:', error.message);
+        }
+      }
+    }
+
+    // Generate JWT token
+    const payload = {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      stellarPublicKey: user.stellarPublicKey,
+    };
+
+    const access_token = await this.jwtService.signAsync(payload);
+
+    return {
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        stellarPublicKey: user.stellarPublicKey,
+        kycStatus: user.kycStatus,
+      },
+      access_token,
+    };
+  }
 }

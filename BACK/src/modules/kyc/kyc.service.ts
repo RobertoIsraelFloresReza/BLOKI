@@ -13,10 +13,10 @@ import * as crypto from 'crypto';
 @Injectable()
 export class KYCService {
   private readonly logger = new Logger(KYCService.name);
-  private readonly kycProvider = 'synaps'; // Cambiar según proveedor
+  private readonly kycProvider = 'veriff';
   private readonly kycApiKey: string;
   private readonly kycWebhookSecret: string;
-  private readonly kycApiUrl = 'https://api.synaps.io/v1'; // URL del proveedor
+  private readonly kycApiUrl: string;
 
   // Límites de transacción por nivel KYC
   private readonly transactionLimits = {
@@ -33,8 +33,9 @@ export class KYCService {
     private userService: UserService,
     private configService: ConfigService,
   ) {
-    this.kycApiKey = this.configService.get('KYC_API_KEY') || '';
-    this.kycWebhookSecret = this.configService.get('KYC_WEBHOOK_SECRET') || '';
+    this.kycApiKey = this.configService.get('VERIFF_API_KEY') || '';
+    this.kycWebhookSecret = this.configService.get('VERIFF_SECRET_KEY') || '';
+    this.kycApiUrl = this.configService.get('VERIFF_BASE_URL') || 'https://stationapi.veriff.com';
   }
 
   /**
@@ -287,55 +288,87 @@ export class KYCService {
   }
 
   /**
-   * Comunica con el proveedor KYC para crear sesión
-   * En producción, esto sería una llamada real a Synaps, Onfido, etc.
+   * Comunica con Veriff API para crear sesión de verificación
+   * Documentación: https://developers.veriff.com/#sessions
    */
   private async createKYCSessionWithProvider(data: any): Promise<{ verificationUrl: string }> {
     try {
-      // MOCK para desarrollo - Reemplazar con llamada real
       if (!this.kycApiKey) {
-        this.logger.warn('KYC_API_KEY no configurado, usando respuesta mock');
-        return {
-          verificationUrl: `https://mock-provider.com/verify/${data.sessionId}`,
-        };
+        this.logger.error('VERIFF_API_KEY no configurado');
+        throw new BadRequestException('Servicio KYC no configurado correctamente');
       }
 
-      // Aquí iría la llamada real al proveedor
-      // const response = await fetch(`${this.kycApiUrl}/sessions`, {
-      //   method: 'POST',
-      //   headers: {
-      //     'Authorization': `Bearer ${this.kycApiKey}`,
-      //     'Content-Type': 'application/json'
-      //   },
-      //   body: JSON.stringify(data)
-      // });
+      const payload = {
+        verification: {
+          callback: `${this.configService.get('API_BASE_URL')}/kyc/webhook`,
+          person: {
+            firstName: data.firstName,
+            lastName: data.lastName,
+          },
+          vendorData: data.sessionId,
+          timestamp: new Date().toISOString(),
+        },
+      };
 
-      // return response.json();
+      this.logger.log(`Creando sesión Veriff para: ${data.email}`);
 
-      // Temporary return for when API key is configured but not implemented yet
+      const response = await fetch(`${this.kycApiUrl}/v1/sessions`, {
+        method: 'POST',
+        headers: {
+          'X-AUTH-CLIENT': this.kycApiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        this.logger.error(`Error de Veriff API: ${response.status} - ${errorData}`);
+        throw new BadRequestException('Error al crear sesión de verificación');
+      }
+
+      const veriffResponse = await response.json();
+
       return {
-        verificationUrl: `https://mock-provider.com/verify/${data.sessionId}`,
+        verificationUrl: veriffResponse.verification.url,
       };
     } catch (error) {
-      this.logger.error(`Error comunicando con proveedor KYC: ${error.message}`);
+      this.logger.error(`Error comunicando con Veriff: ${error.message}`);
       throw error;
     }
   }
 
   /**
-   * Valida la firma del webhook
+   * Valida la firma del webhook de Veriff
+   * Veriff envía la firma como X-HMAC-SIGNATURE en los headers
+   * Documentación: https://developers.veriff.com/#webhooks
    */
   private validateWebhookSignature(data: KYCWebhookDTO, signature: string): boolean {
     try {
-      // Crear hash del payload sin la firma
+      if (!this.kycWebhookSecret) {
+        this.logger.warn('VERIFF_SECRET_KEY no configurado, saltando validación de firma');
+        return true; // En desarrollo, permitir sin validación
+      }
+
+      // Crear hash del payload completo
       const { signature: _, ...dataToHash } = data;
       const payload = JSON.stringify(dataToHash);
+
+      // Veriff usa SHA256 HMAC con la secret key
       const calculatedSignature = crypto
         .createHmac('sha256', this.kycWebhookSecret)
         .update(payload)
         .digest('hex');
 
-      return calculatedSignature === signature;
+      const isValid = calculatedSignature === signature;
+
+      if (!isValid) {
+        this.logger.error('Firma del webhook inválida');
+        this.logger.debug(`Signature recibida: ${signature}`);
+        this.logger.debug(`Signature calculada: ${calculatedSignature}`);
+      }
+
+      return isValid;
     } catch (error) {
       this.logger.error(`Error validando firma del webhook: ${error.message}`);
       return false;

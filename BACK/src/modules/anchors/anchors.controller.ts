@@ -13,6 +13,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 import { AnchorsService } from './anchors.service';
 import { DepositDto } from './dto/deposit.dto';
 import { WithdrawDto } from './dto/withdraw.dto';
+import { Public } from '../../common/decorators/public.decorator';
 
 @ApiTags('Anchors (SEP-24)')
 @Controller('anchors')
@@ -20,6 +21,7 @@ export class AnchorsController {
   constructor(private readonly anchorsService: AnchorsService) {}
 
   @Get('sep24/info')
+  @Public()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'SEP-24: Get anchor information and supported assets' })
   @ApiResponse({
@@ -53,6 +55,7 @@ export class AnchorsController {
   }
 
   @Get('sep24/transactions/deposit/interactive')
+  @Public()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'SEP-24: Initiate interactive deposit flow' })
   @ApiQuery({ name: 'account', required: true, description: 'Stellar account address' })
@@ -81,6 +84,7 @@ export class AnchorsController {
   }
 
   @Post('sep24/transactions/deposit/interactive')
+  @Public()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'SEP-24: Initiate interactive deposit flow (POST)' })
   @ApiResponse({ status: 200, description: 'Interactive deposit URL generated' })
@@ -89,6 +93,7 @@ export class AnchorsController {
   }
 
   @Get('sep24/transactions/withdraw/interactive')
+  @Public()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'SEP-24: Initiate interactive withdrawal flow' })
   @ApiQuery({ name: 'account', required: true, description: 'Stellar account address' })
@@ -120,6 +125,7 @@ export class AnchorsController {
   }
 
   @Post('sep24/transactions/withdraw/interactive')
+  @Public()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'SEP-24: Initiate interactive withdrawal flow (POST)' })
   @ApiResponse({ status: 200, description: 'Interactive withdrawal URL generated' })
@@ -128,6 +134,7 @@ export class AnchorsController {
   }
 
   @Get('sep24/transaction')
+  @Public()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'SEP-24: Get transaction status' })
   @ApiQuery({ name: 'id', required: true, description: 'Transaction ID' })
@@ -170,6 +177,7 @@ export class AnchorsController {
   }
 
   @Get('sep24/transactions')
+  @Public()
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'SEP-24: Get transactions for an account' })
   @ApiQuery({ name: 'account', required: true, description: 'Stellar account address' })
