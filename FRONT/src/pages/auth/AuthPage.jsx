@@ -123,7 +123,7 @@ export function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 lg:p-8 relative overflow-hidden bg-gradient-to-br from-background via-background to-accent/5">
+    <div className="min-h-screen flex items-center justify-center p-4 lg:p-8 relative overflow-hidden bg-background">
       {/* Animated background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-20 w-72 h-72 bg-primary/10 rounded-full blur-3xl animate-pulse" />

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { Home, Building2, Hotel, Warehouse, TrendingUp, Search, X } from 'lucide-react'
 import { SearchBar } from '@/components/marketplace/SearchBar'
 import { FiltersTabs } from '@/components/marketplace/FiltersTabs'
-import { PropertyCard } from '@/components/marketplace/PropertyCard'
+import { MarketplaceHeader } from '@/components/marketplace/MarketplaceHeader'
+import { PropertyCard } from '@/components/properties/PropertyCard'
 import { PropertyDetails } from '@/pages/property'
-import { ScrollReveal, ScrollRevealItem, AnimatedText, Spinner } from '@/components/ui'
+import { ScrollReveal, ScrollRevealItem, Spinner } from '@/components/ui'
 import { useStrings } from '@/utils/localizations/useStrings'
 import { useProperties } from '@/hooks'
 
@@ -229,10 +231,17 @@ const DEMO_PROPERTIES = [
 ]
 
 export function Marketplace({ user, onFiltersChange, isScrolled, showMobileSearch, onCloseMobileSearch }) {
+  const navigate = useNavigate()
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useState('all')
   const [selectedProperty, setSelectedProperty] = useState(null)
   const Strings = useStrings()
+
+  // Handler to navigate to property details
+  const handleViewDetails = (property) => {
+    console.log('🔍 DEBUG Marketplace - Navigating to property:', property.id)
+    navigate(`/property/${property.id}`)
+  }
 
   // ALWAYS use real backend data
   const { properties, isLoading, error } = useProperties({
@@ -294,7 +303,15 @@ export function Marketplace({ user, onFiltersChange, isScrolled, showMobileSearc
   })
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      {/* Breathing Background Effect - Positioned in header area but behind everything */}
+      <div className="absolute top-0 left-0 right-0 h-[600px] pointer-events-none overflow-visible z-0">
+        {/* Animated breathing circles */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-400/40 dark:bg-primary/10 rounded-full blur-3xl animate-breathing" />
+        <div className="absolute top-32 right-1/4 w-96 h-96 bg-blue-500/35 dark:bg-secondary/10 rounded-full blur-3xl animate-breathing-delayed" />
+        <div className="absolute top-64 left-1/2 w-96 h-96 bg-blue-300/30 dark:bg-primary/5 rounded-full blur-3xl animate-breathing-slow" />
+      </div>
+
       {/* Mobile Search Modal */}
       {showMobileSearch && (
         <div className="lg:hidden fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl animate-fadeIn">
@@ -347,53 +364,20 @@ export function Marketplace({ user, onFiltersChange, isScrolled, showMobileSearc
       )}
 
       {/* Header Section */}
-      <div className="">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          {/* Title */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-4 font-open-sans text-foreground leading-tight">
-              <AnimatedText
-                text="La Nueva Inversión Inmobiliaria"
-                type="wave"
-                delay={0}
-              />
-            </h1>
-            <ScrollReveal delay={0.6} duration={0.6}>
-              <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto font-open-sans">
-                Diversifica y obtén ingresos pasivos de bienes raíces—en Stellar
-              </p>
-            </ScrollReveal>
-          </div>
-
-          {/* Search Bar - Desktop Only */}
-          <ScrollReveal delay={0.2} duration={0.6}>
-            <div className="hidden lg:block max-w-2xl mx-auto mb-8">
-              <SearchBar
-                placeholder={Strings.searchPlaceholder}
-                value={searchQuery}
-                onChange={setSearchQuery}
-              />
-            </div>
-          </ScrollReveal>
-
-          {/* Filter Tabs - Mobile Only (in header as shortcut) */}
-          <ScrollReveal delay={0.4} duration={0.6}>
-            <div className="lg:hidden">
-              <FiltersTabs
-                filters={getPropertyFilters(Strings)}
-                selectedFilter={selectedFilter}
-                onFilterChange={setSelectedFilter}
-              />
-            </div>
-          </ScrollReveal>
-        </div>
-      </div>
+      <MarketplaceHeader
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        filters={getPropertyFilters(Strings)}
+        selectedFilter={selectedFilter}
+        setSelectedFilter={setSelectedFilter}
+        Strings={Strings}
+      />
 
       {/* Sticky Filter Tabs - Desktop Only (hidden when scrolled, shown in navbar) */}
-      <div className={`hidden lg:block sticky top-0 z-40 w-full bg-background/95 backdrop-blur-xl border-b border-border/50 rounded-b-2xl transition-opacity duration-300 ${
+      <div className={`hidden lg:block sticky top-0 z-40 w-full transition-opacity duration-300 bg-transparent ${
         isScrolled ? 'opacity-0 pointer-events-none' : 'opacity-100'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="max-w-7xl mx-auto px-6 sm:px-6 lg:px-8 py-4 bg-transparent">
           <FiltersTabs
             filters={getPropertyFilters(Strings)}
             selectedFilter={selectedFilter}
@@ -403,7 +387,7 @@ export function Marketplace({ user, onFiltersChange, isScrolled, showMobileSearc
       </div>
 
       {/* Properties Grid Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-6 sm:px-6 lg:px-8 py-12">
         {/* Loading State */}
         {isLoading && (
           <div className="flex justify-center items-center py-20">
@@ -446,7 +430,7 @@ export function Marketplace({ user, onFiltersChange, isScrolled, showMobileSearc
               >
                 <PropertyCard
                   property={property}
-                  onViewDetails={setSelectedProperty}
+                  onViewDetails={handleViewDetails}
                 />
               </ScrollRevealItem>
             ))}

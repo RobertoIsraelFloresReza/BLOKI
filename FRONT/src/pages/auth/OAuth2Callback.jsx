@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import { LoaderButton } from '@/components/ui'
 
 /**
@@ -10,6 +11,7 @@ import { LoaderButton } from '@/components/ui'
 export function OAuth2Callback() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
 
   useEffect(() => {
     const token = searchParams.get('token')
@@ -31,6 +33,9 @@ export function OAuth2Callback() {
 
         localStorage.setItem('blocki_user', JSON.stringify(user))
 
+        // Update React Query cache so useAuth hook gets the user immediately
+        queryClient.setQueryData(['auth', 'user'], user)
+
         // Redirect to marketplace
         navigate('/', { replace: true })
       } catch (error) {
@@ -42,7 +47,7 @@ export function OAuth2Callback() {
       // No token found, redirect to auth page
       navigate('/auth', { replace: true })
     }
-  }, [searchParams, navigate])
+  }, [searchParams, navigate, queryClient])
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-accent/5">

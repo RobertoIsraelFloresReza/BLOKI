@@ -15,7 +15,7 @@ export const kycService = {
    */
   async startKYC(userId, level = 1) {
     try {
-      const token = localStorage.getItem('access_token')
+      const token = localStorage.getItem('blocki_token')
       const response = await axios.post(
         `${API_URL}/kyc/start`,
         {
@@ -42,7 +42,7 @@ export const kycService = {
    */
   async getKYCStatus(userId) {
     try {
-      const token = localStorage.getItem('access_token')
+      const token = localStorage.getItem('blocki_token')
       const response = await axios.get(`${API_URL}/kyc/status/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -62,7 +62,7 @@ export const kycService = {
    */
   async retryKYC(userId) {
     try {
-      const token = localStorage.getItem('access_token')
+      const token = localStorage.getItem('blocki_token')
       const response = await axios.post(
         `${API_URL}/kyc/retry/${userId}`,
         {},
@@ -86,7 +86,7 @@ export const kycService = {
    */
   async getTransactionLimit(userId) {
     try {
-      const token = localStorage.getItem('access_token')
+      const token = localStorage.getItem('blocki_token')
       const response = await axios.get(`${API_URL}/kyc/transaction-limit/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -95,6 +95,30 @@ export const kycService = {
       return response.data
     } catch (error) {
       console.error('Error getting transaction limit:', error)
+      throw error
+    }
+  },
+
+  /**
+   * Fixes the externalVerificationId for old KYC sessions
+   * @param {number} userId - User ID
+   * @returns {Promise} Fix result
+   */
+  async fixExternalVerificationId(userId) {
+    try {
+      const token = localStorage.getItem('blocki_token')
+      const response = await axios.post(
+        `${API_URL}/kyc/fix-external-id/${userId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      )
+      return response.data
+    } catch (error) {
+      console.error('Error fixing external verification ID:', error)
       throw error
     }
   },

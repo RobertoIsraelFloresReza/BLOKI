@@ -150,6 +150,9 @@
 
   html {
     scroll-behavior: smooth;
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
   }
 
   body {
@@ -157,9 +160,21 @@
     color: var(--color-foreground);
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     margin: 0;
+    padding: 0;
+    width: 100%;
+    max-width: 100vw;
     min-height: 100vh;
+    overflow-x: hidden;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+
+  #root {
+    width: 100%;
+    max-width: 100vw;
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
   }
 
   /* Headings */
@@ -321,6 +336,48 @@
   }
 }
 
+@keyframes breathing {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.5;
+  }
+}
+
+@keyframes breathing-delayed {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.2;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.4;
+  }
+}
+
+@keyframes breathing-slow {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.15;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.3;
+  }
+}
+
+@keyframes gradient-x {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
 /* ============================================
    Utility Classes
    ============================================ */
@@ -378,12 +435,36 @@
     animation: coin-flip 0.8s ease-in-out;
   }
 
+  .animate-breathing {
+    animation: breathing 4s ease-in-out infinite;
+  }
+
+  .animate-breathing-delayed {
+    animation: breathing-delayed 5s ease-in-out infinite;
+    animation-delay: 1s;
+  }
+
+  .animate-breathing-slow {
+    animation: breathing-slow 6s ease-in-out infinite;
+    animation-delay: 2s;
+  }
+
+  .animate-gradient-x {
+    animation: gradient-x 3s ease infinite;
+    background-size: 200% 200%;
+  }
+
   .animation-delay-2000 {
     animation-delay: 2s;
   }
 
   .animation-delay-4000 {
     animation-delay: 4s;
+  }
+
+  /* Active Scale for iOS-like buttons */
+  .active\:scale-98:active {
+    transform: scale(0.98);
   }
 
   /* Text Truncate */

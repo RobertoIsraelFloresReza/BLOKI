@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react'
 import { Plus, Home, DollarSign, Users, CheckCircle, Clock, XCircle } from 'lucide-react'
 import { Button, Card, CardContent, Badge, Spinner } from '@/components/ui'
 import { PropertyUploadForm } from '@/components/seller/PropertyUploadForm'
-import { PropertyCard } from '@/components/marketplace/PropertyCard'
+import { PropertyCard } from '@/components/properties/PropertyCard'
 import { PropertyDetails } from '@/pages/property/PropertyDetails'
 import { useStrings } from '@/utils/localizations/useStrings'
-import { useProperties } from '@/hooks'
+import { useMyOwnedProperties, useProperties } from '@/hooks'
+import { useQueryClient } from '@tanstack/react-query'
 import toast from 'react-hot-toast'
 
 /**
@@ -17,24 +18,23 @@ import toast from 'react-hot-toast'
 
 export function SellerDashboard({ user }) {
   const [showUploadForm, setShowUploadForm] = useState(false)
+  const [editingProperty, setEditingProperty] = useState(null)
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [selectedProperty, setSelectedProperty] = useState(null)
   const Strings = useStrings()
+  const queryClient = useQueryClient()
 
-  // Fetch user's properties from backend
-  const { properties: allProperties, isLoading, error } = useProperties()
+  // Fetch user's owned properties from backend (uses /properties/my-owned endpoint)
+  const { data: ownedPropertiesResponse, isLoading, error } = useMyOwnedProperties()
 
-  // Filter properties to show only current user's properties
-  // Backend should ideally have a filter by userId, but for now we filter client-side
-  const userProperties = allProperties.filter(property => {
-    // Match by user ID or legal owner
-    return property.userId === user?.id ||
-           property.legalOwner === user?.name ||
-           property.legalOwner === user?.email
-  })
+  // Get delete mutation from useProperties hook
+  const { deleteProperty, isDeleting } = useProperties()
+
+  // Backend returns {data: [...]} so extract the array
+  const userProperties = ownedPropertiesResponse?.data || ownedPropertiesResponse || []
 
   console.log('🔍 DEBUG SellerDashboard - User:', user)
-  console.log('🔍 DEBUG SellerDashboard - All properties:', allProperties)
+  console.log('🔍 DEBUG SellerDashboard - Owned properties response:', ownedPropertiesResponse)
   console.log('🔍 DEBUG SellerDashboard - User properties:', userProperties)
 
   // Calculate statistics from user's properties
@@ -61,9 +61,38 @@ export function SellerDashboard({ user }) {
     : userProperties.filter(p => (p.status || 'active') === selectedStatus)
 
   const handleUploadSuccess = (newProperty) => {
-    // Just close the form - the query will auto-refresh
+    // Close the form
     setShowUploadForm(false)
-    toast.success('Propiedad creada. Aparecerá en tu dashboard en unos momentos.')
+    setEditingProperty(null)
+
+    // Invalidate queries to refresh the properties list
+    queryClient.invalidateQueries({ queryKey: ['properties', 'my-owned'] })
+    queryClient.invalidateQueries({ queryKey: ['properties'] })
+
+    const message = editingProperty
+      ? '¡Propiedad actualizada exitosamente!'
+      : '¡Propiedad creada! Aparecerá en tu dashboard en unos momentos.'
+    toast.success(message)
+  }
+
+  const handleEditProperty = (property) => {
+    setEditingProperty(property)
+    setShowUploadForm(true)
+  }
+
+  const handleDeleteProperty = (property) => {
+    const propertyName = property.name || property.title
+    if (window.confirm(`¿Estás seguro de eliminar "${propertyName}"?\n\nEsta acción no se puede deshacer.`)) {
+      deleteProperty(property.id, {
+        onSuccess: () => {
+          toast.success(`Propiedad "${propertyName}" eliminada exitosamente`)
+        },
+        onError: (error) => {
+          const message = error.response?.data?.message || 'Error al eliminar la propiedad'
+          toast.error(message)
+        }
+      })
+    }
   }
 
   // Status badges configuration
@@ -99,13 +128,17 @@ export function SellerDashboard({ user }) {
     )
   }
 
-  // Show upload form if requested
+  // Show upload/edit form if requested
   if (showUploadForm) {
     return (
       <PropertyUploadForm
-        onBack={() => setShowUploadForm(false)}
+        onBack={() => {
+          setShowUploadForm(false)
+          setEditingProperty(null)
+        }}
         onSuccess={handleUploadSuccess}
         user={user}
+        initialProperty={editingProperty}
       />
     )
   }
@@ -147,7 +180,7 @@ export function SellerDashboard({ user }) {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header Section - Similar to Marketplace */}
-      <div className="border-b border-border">
+      <div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {/* Title */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
@@ -276,7 +309,10 @@ export function SellerDashboard({ user }) {
               <PropertyCard
                 key={property.id}
                 property={property}
+                showActions={true}
                 onViewDetails={() => setSelectedProperty(property)}
+                onEdit={() => handleEditProperty(property)}
+                onDelete={() => handleDeleteProperty(property)}
               />
             ))}
           </div>

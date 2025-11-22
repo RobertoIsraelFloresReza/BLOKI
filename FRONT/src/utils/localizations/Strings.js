@@ -20,7 +20,12 @@ class StringsBase {
   // Marketplace Page
   // ============================================
   static marketplaceTitle = 'marketplaceTitle'
+  static marketplaceTitleLine1 = 'marketplaceTitleLine1'
+  static marketplaceTitleLine2 = 'marketplaceTitleLine2'
+  static marketplaceTitleLine3 = 'marketplaceTitleLine3'
   static marketplaceSubtitle = 'marketplaceSubtitle'
+  static marketplaceSubtitlePassive = 'marketplaceSubtitlePassive'
+  static marketplaceSubtitleTokenized = 'marketplaceSubtitleTokenized'
   static searchPlaceholder = 'searchPlaceholder'
   static propertiesFound = 'propertiesFound'
   static propertyFound = 'propertyFound'
@@ -256,6 +261,31 @@ class StringsBase {
   static propertyName = 'propertyName'
 
   // ============================================
+  // Evaluators Page
+  // ============================================
+  static certifiedEvaluators = 'certifiedEvaluators'
+  static evaluatorsDescription = 'evaluatorsDescription'
+  static activeEvaluators = 'activeEvaluators'
+  static propertiesEvaluated = 'propertiesEvaluated'
+  static averageRating = 'averageRating'
+  static searchEvaluators = 'searchEvaluators'
+  static loadingEvaluators = 'loadingEvaluators'
+  static errorLoadingEvaluators = 'errorLoadingEvaluators'
+  static errorLoadingEvaluatorsMessage = 'errorLoadingEvaluatorsMessage'
+  static noEvaluatorsFound = 'noEvaluatorsFound'
+  static tryOtherSearchTerms = 'tryOtherSearchTerms'
+  static noEvaluatorsYet = 'noEvaluatorsYet'
+  static more = 'more'
+  static certifiedByBlocki = 'certifiedByBlocki'
+  static evaluatorProfile = 'evaluatorProfile'
+  static statistics = 'statistics'
+  static certifications = 'certifications'
+  static propertiesHistory = 'propertiesHistory'
+  static backToEvaluators = 'backToEvaluators'
+  static evaluatorNotFound = 'evaluatorNotFound'
+  static noPropertiesEvaluatedYet = 'noPropertiesEvaluatedYet'
+
+  // ============================================
   // Footer
   // ============================================
   static about = 'about'
@@ -264,15 +294,27 @@ class StringsBase {
   static team = 'team'
   static legal = 'legal'
   static privacy = 'privacy'
+  static privacyPolicy = 'privacyPolicy'
   static terms = 'terms'
+  static termsOfService = 'termsOfService'
   static cookies = 'cookies'
+  static cookiesPolicy = 'cookiesPolicy'
   static support = 'support'
   static helpCenter = 'helpCenter'
   static contact = 'contact'
   static faq = 'faq'
   static allRightsReserved = 'allRightsReserved'
   static poweredBy = 'poweredBy'
+  static builtFor = 'builtFor'
   static footerDescription = 'footerDescription'
+  static technology = 'technology'
+  static totalVolume = 'totalVolume'
+  static blockchainSecurity = 'blockchainSecurity'
+  static livePlatform = 'livePlatform'
+  static stellarBlockchain = 'stellarBlockchain'
+  static sorobanSmartContracts = 'sorobanSmartContracts'
+  static freighterWallet = 'freighterWallet'
+  static hackathonBadge = 'hackathonBadge'
 }
 
 // Create a Proxy object for StringsBase to intercept property access

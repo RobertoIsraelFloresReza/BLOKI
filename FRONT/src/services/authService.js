@@ -30,9 +30,12 @@ export const authService = {
     // Backend returns: { token, user, wallet: { publicKey, secretKey, mnemonic } }
     const { token, user, wallet } = response.data
 
-    // Store token
+    // Store token and user
     if (token) {
       localStorage.setItem('blocki_token', token)
+    }
+    if (user) {
+      localStorage.setItem('blocki_user', JSON.stringify(user))
     }
 
     return { token, user, wallet }

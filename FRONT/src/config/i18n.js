@@ -24,8 +24,12 @@ const resources = {
       // Marketplace Page
       // ============================================
       marketplaceTitle: 'Property Marketplace',
-      marketplaceSubtitle:
-        'Invest in tokenized properties on the Stellar blockchain. Diversify your portfolio with premium real estate fractions.',
+      marketplaceTitleLine1: 'The Future of',
+      marketplaceTitleLine2: 'Investment',
+      marketplaceTitleLine3: 'Real Estate',
+      marketplaceSubtitle: 'Diversify and earn',
+      marketplaceSubtitlePassive: 'passive income',
+      marketplaceSubtitleTokenized: 'from tokenized real estate on',
       searchPlaceholder: 'Search properties, locations...',
       propertiesFound: 'properties found',
       propertyFound: 'property found',
@@ -262,6 +266,31 @@ const resources = {
       propertyName: 'Property Name',
 
       // ============================================
+      // Evaluators Page
+      // ============================================
+      certifiedEvaluators: 'Certified Evaluators',
+      evaluatorsDescription: 'Companies verified by Blocki to ensure professional valuations and prevent fraud',
+      activeEvaluators: 'Active Evaluators',
+      propertiesEvaluated: 'Properties Evaluated',
+      averageRating: 'Average Rating',
+      searchEvaluators: 'Search evaluators by name, country, or description...',
+      loadingEvaluators: 'Loading evaluators...',
+      errorLoadingEvaluators: 'Error loading evaluators',
+      errorLoadingEvaluatorsMessage: 'Could not load evaluators',
+      noEvaluatorsFound: 'No evaluators found',
+      tryOtherSearchTerms: 'Try other search terms',
+      noEvaluatorsYet: 'No certified evaluators on the platform yet',
+      more: 'more',
+      certifiedByBlocki: 'Certified by Blocki',
+      evaluatorProfile: 'Evaluator Profile',
+      statistics: 'Statistics',
+      certifications: 'Certifications',
+      propertiesHistory: 'Properties History',
+      backToEvaluators: 'Back to Evaluators',
+      evaluatorNotFound: 'Evaluator not found',
+      noPropertiesEvaluatedYet: 'This evaluator has not certified any properties on the platform yet',
+
+      // ============================================
       // Footer
       // ============================================
       about: 'About',
@@ -270,15 +299,27 @@ const resources = {
       team: 'Team',
       legal: 'Legal',
       privacy: 'Privacy Policy',
+      privacyPolicy: 'Privacy Policy',
       terms: 'Terms of Service',
+      termsOfService: 'Terms of Service',
       cookies: 'Cookies',
+      cookiesPolicy: 'Cookies Policy',
       support: 'Support',
       helpCenter: 'Help Center',
       contact: 'Contact',
       faq: 'FAQ',
       allRightsReserved: 'All rights reserved.',
       poweredBy: 'Powered by',
-      footerDescription: 'Decentralized real estate marketplace powered by Stellar blockchain. Invest in tokenized properties with transparency and security.',
+      builtFor: 'Built for',
+      footerDescription: 'Tokenized real estate investment platform. Built on Stellar blockchain for maximum transparency and security.',
+      technology: 'Technology',
+      totalVolume: 'Total Volume',
+      blockchainSecurity: 'Blockchain Security',
+      livePlatform: 'Live Platform',
+      stellarBlockchain: 'Stellar Blockchain',
+      sorobanSmartContracts: 'Soroban Smart Contracts',
+      freighterWallet: 'Freighter Wallet',
+      hackathonBadge: 'Stellar Meridian Hackathon 2025',
     },
   },
   es: {
@@ -302,8 +343,12 @@ const resources = {
       // Marketplace Page
       // ============================================
       marketplaceTitle: 'Marketplace de Propiedades',
-      marketplaceSubtitle:
-        'Invierte en propiedades tokenizadas en la blockchain de Stellar. Diversifica tu portafolio con fracciones de bienes raíces premium.',
+      marketplaceTitleLine1: 'El Futuro en',
+      marketplaceTitleLine2: 'Inversión de',
+      marketplaceTitleLine3: 'Bienes Raíces',
+      marketplaceSubtitle: 'Diversifica y obtén',
+      marketplaceSubtitlePassive: 'ingresos pasivos',
+      marketplaceSubtitleTokenized: 'de bienes raíces tokenizados en',
       searchPlaceholder: 'Buscar propiedades, ubicaciones...',
       propertiesFound: 'propiedades encontradas',
       propertyFound: 'propiedad encontrada',
@@ -540,6 +585,31 @@ const resources = {
       propertyName: 'Nombre de la Propiedad',
 
       // ============================================
+      // Evaluators Page
+      // ============================================
+      certifiedEvaluators: 'Evaluadores Certificados',
+      evaluatorsDescription: 'Empresas verificadas por Blocki para garantizar valuaciones profesionales y prevenir fraudes',
+      activeEvaluators: 'Evaluadores Activos',
+      propertiesEvaluated: 'Propiedades Evaluadas',
+      averageRating: 'Rating Promedio',
+      searchEvaluators: 'Buscar evaluadores por nombre, país o descripción...',
+      loadingEvaluators: 'Cargando evaluadores...',
+      errorLoadingEvaluators: 'Error al cargar evaluadores',
+      errorLoadingEvaluatorsMessage: 'No se pudieron cargar los evaluadores',
+      noEvaluatorsFound: 'No se encontraron evaluadores',
+      tryOtherSearchTerms: 'Intenta con otros términos de búsqueda',
+      noEvaluatorsYet: 'Aún no hay evaluadores certificados en la plataforma',
+      more: 'más',
+      certifiedByBlocki: 'Certificado por Blocki',
+      evaluatorProfile: 'Perfil del Evaluador',
+      statistics: 'Estadísticas',
+      certifications: 'Certificaciones',
+      propertiesHistory: 'Historial de Propiedades Evaluadas',
+      backToEvaluators: 'Volver a Evaluadores',
+      evaluatorNotFound: 'Evaluador no encontrado',
+      noPropertiesEvaluatedYet: 'Este evaluador aún no ha certificado propiedades en la plataforma',
+
+      // ============================================
       // Footer
       // ============================================
       about: 'Acerca de',
@@ -548,15 +618,27 @@ const resources = {
       team: 'Equipo',
       legal: 'Legal',
       privacy: 'Política de Privacidad',
+      privacyPolicy: 'Política de Privacidad',
       terms: 'Términos de Servicio',
+      termsOfService: 'Términos de Servicio',
       cookies: 'Cookies',
+      cookiesPolicy: 'Política de Cookies',
       support: 'Soporte',
       helpCenter: 'Centro de Ayuda',
       contact: 'Contacto',
       faq: 'Preguntas Frecuentes',
       allRightsReserved: 'Todos los derechos reservados.',
       poweredBy: 'Desarrollado con',
-      footerDescription: 'Marketplace descentralizado de bienes raíces basado en blockchain de Stellar. Invierte en propiedades tokenizadas con transparencia y seguridad.',
+      builtFor: 'Construido para',
+      footerDescription: 'Plataforma de inversión en bienes raíces tokenizados. Construida sobre blockchain de Stellar para máxima transparencia y seguridad.',
+      technology: 'Tecnología',
+      totalVolume: 'Volumen Total',
+      blockchainSecurity: 'Seguridad Blockchain',
+      livePlatform: 'Plataforma en Vivo',
+      stellarBlockchain: 'Blockchain de Stellar',
+      sorobanSmartContracts: 'Contratos Inteligentes Soroban',
+      freighterWallet: 'Wallet Freighter',
+      hackathonBadge: 'Hackathon Stellar Meridian 2025',
     },
   },
 }

@@ -61,6 +61,9 @@ export const propertyService = {
    * @returns {Promise<Object>} Created property with contract ID
    */
   async createProperty(data) {
+    console.log('🏗️ === PROPERTY SERVICE: CREATE PROPERTY ===')
+    console.log('📝 Input data:', data)
+
     // Note: category should be in metadata, not as root field
     const payload = {
       ...data,
@@ -72,10 +75,23 @@ export const propertyService = {
     // Remove category from root if exists
     delete payload.category
 
-    console.log('🔍 DEBUG propertyService - Create payload:', payload)
+    console.log('📦 Final payload:', JSON.stringify(payload, null, 2))
+    console.log('🔗 POST /properties')
+
     const response = await api.post('/properties', payload)
-    console.log('🔍 DEBUG propertyService - Create response:', response.data)
-    return response.data
+
+    console.log('✅ Property created successfully!')
+    console.log('📄 Raw response:', response.data)
+
+    // Handle wrapped response format: { data: {...}, message, status }
+    const propertyData = response.data.data || response.data
+
+    console.log('📦 Property data:', propertyData)
+    console.log('🆔 Property ID:', propertyData.id)
+    console.log('🔗 Contract ID:', propertyData.contractId)
+    console.log('=== CREATE PROPERTY END ===')
+
+    return propertyData
   },
 
   /**
@@ -90,7 +106,7 @@ export const propertyService = {
   },
 
   /**
-   * Delete property
+   * Delete property (only owner can delete)
    * @param {string} id - Property ID
    * @returns {Promise<void>}
    */
@@ -106,13 +122,33 @@ export const propertyService = {
    * @returns {Promise<{images: string[]}>} Array of uploaded image URLs
    */
   async uploadImages(id, files) {
+    console.log('🖼️ === PROPERTY SERVICE: UPLOAD IMAGES ===')
+    console.log('📍 Property ID:', id)
+    console.log('📁 Files to upload:', files.length)
+
+    files.forEach((file, i) => {
+      console.log(`  ${i + 1}. ${file.name} - ${(file.size / 1024).toFixed(2)}KB - ${file.type}`)
+    })
+
     const formData = createFormDataRequest({}, files, 'images')
+
+    console.log('📤 FormData created, sending to backend...')
+    console.log(`🔗 POST /properties/${id}/images`)
 
     const response = await api.post(`/properties/${id}/images`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     })
 
-    return response.data
+    console.log('✅ Backend response:', response.data)
+
+    // Handle wrapped response format
+    const resultData = response.data.data || response.data
+
+    console.log('📦 Result data:', resultData)
+    console.log('🔗 Uploaded images:', resultData.images)
+    console.log('=== UPLOAD IMAGES END ===')
+
+    return resultData
   },
 
   /**
@@ -148,6 +184,27 @@ export const propertyService = {
    */
   async getTransactionHistory(id) {
     const response = await api.get(`/properties/${id}/history`)
+    return response.data
+  },
+
+  /**
+   * Get properties owned by current user (created by user)
+   * @returns {Promise<Array>} Array of owned properties
+   */
+  async getMyOwnedProperties() {
+    console.log('🔍 DEBUG propertyService - Calling GET /properties/my-owned')
+    console.log('🔍 DEBUG propertyService - Token:', localStorage.getItem('blocki_token'))
+    const response = await api.get('/properties/my-owned')
+    console.log('🔍 DEBUG propertyService - Response:', response.data)
+    return response.data
+  },
+
+  /**
+   * Get properties where user has invested (holds tokens)
+   * @returns {Promise<Array>} Array of investment properties
+   */
+  async getMyInvestments() {
+    const response = await api.get('/properties/my-investments')
     return response.data
   },
 }

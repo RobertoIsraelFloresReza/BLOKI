@@ -30,16 +30,24 @@ export function useProperties(filters = {}) {
 
   // Create property mutation
   const createMutation = useMutation({
-    mutationFn: propertyService.createProperty,
+    mutationFn: (data) => {
+      console.log('🔄 === useProperties: CREATE MUTATION ===')
+      console.log('Input data:', data)
+      return propertyService.createProperty(data)
+    },
     onSuccess: (newProperty) => {
-      console.log('🔍 DEBUG useProperties - Property created:', newProperty)
-      console.log('🔍 DEBUG useProperties - Invalidating queries...')
+      console.log('✅ Create property mutation success!')
+      console.log('Created property:', newProperty)
+      console.log('Invalidating queries...')
       queryClient.invalidateQueries({ queryKey: ['properties', 'list'] })
       queryClient.invalidateQueries({ queryKey: ['properties'] })
       toast.success(Strings.propertyCreated || 'Propiedad creada exitosamente')
       return newProperty
     },
     onError: (error) => {
+      console.error('❌ Create property mutation error!')
+      console.error('Error:', error)
+      console.error('Response:', error.response?.data)
       const message = error.response?.data?.message || 'Error al crear propiedad'
       toast.error(message)
     },
@@ -64,7 +72,8 @@ export function useProperties(filters = {}) {
     mutationFn: propertyService.deleteProperty,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['properties'] })
-      toast.success(Strings.propertyDeleted || 'Propiedad eliminada')
+      queryClient.invalidateQueries({ queryKey: ['properties', 'my-owned'] })
+      toast.success(Strings.propertyDeleted || 'Propiedad eliminada exitosamente')
     },
     onError: (error) => {
       const message = error.response?.data?.message || 'Error al eliminar propiedad'
@@ -74,12 +83,22 @@ export function useProperties(filters = {}) {
 
   // Upload images mutation
   const uploadImagesMutation = useMutation({
-    mutationFn: ({ id, files }) => propertyService.uploadImages(id, files),
+    mutationFn: ({ id, files }) => {
+      console.log('🔄 === useProperties: UPLOAD IMAGES MUTATION ===')
+      console.log('Property ID:', id)
+      console.log('Files:', files.length)
+      return propertyService.uploadImages(id, files)
+    },
     onSuccess: (data, variables) => {
+      console.log('✅ Upload images mutation success!')
+      console.log('Response data:', data)
       queryClient.invalidateQueries({ queryKey: ['properties', 'detail', variables.id] })
       toast.success(Strings.imagesUploaded || 'Imágenes subidas correctamente')
     },
     onError: (error) => {
+      console.error('❌ Upload images mutation error!')
+      console.error('Error:', error)
+      console.error('Response:', error.response?.data)
       const message = error.response?.data?.message || 'Error al subir imágenes'
       toast.error(message)
     },
@@ -161,6 +180,28 @@ export function usePropertyHistory(id) {
     queryKey: ['properties', 'history', id],
     queryFn: () => propertyService.getTransactionHistory(id),
     enabled: !!id,
+    staleTime: 30 * 1000, // 30 seconds
+  })
+}
+
+/**
+ * Hook for fetching user's owned properties (created by user)
+ */
+export function useMyOwnedProperties() {
+  return useQuery({
+    queryKey: ['properties', 'my-owned'],
+    queryFn: propertyService.getMyOwnedProperties,
+    staleTime: 1 * 60 * 1000, // 1 minute
+  })
+}
+
+/**
+ * Hook for fetching user's investment properties (holds tokens)
+ */
+export function useMyInvestments() {
+  return useQuery({
+    queryKey: ['properties', 'my-investments'],
+    queryFn: propertyService.getMyInvestments,
     staleTime: 30 * 1000, // 30 seconds
   })
 }

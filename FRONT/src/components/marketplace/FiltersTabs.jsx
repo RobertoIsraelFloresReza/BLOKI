@@ -17,13 +17,13 @@ export function FiltersTabs({
   }
 
   return (
-    <div className={cn("relative", className)}>
-      {/* Gradient overlays for scroll indication */}
-      <div className="absolute left-0 top-0 bottom-0 w-8 pointer-events-none z-10 " />
-      <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-background to-transparent pointer-events-none z-10" />
+    <div className={cn("relative bg-transparent", className)}>
+      {/* Gradient overlays for scroll indication - Hidden on mobile */}
+      <div className="hidden md:block absolute left-0 top-0 bottom-0 w-8 pointer-events-none z-10 bg-gradient-to-r from-background to-transparent" />
+      <div className="hidden md:block absolute right-0 top-0 bottom-0 w-8 pointer-events-none z-10 bg-gradient-to-l from-background to-transparent" />
 
       {/* Scrollable container */}
-      <div className="flex gap-4 overflow-x-auto scrollbar-hide p-4 justify-center">
+      <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 py-4 justify-start lg:justify-center bg-transparent">
         {filters.map((filter) => (
           <button
             key={filter.id}

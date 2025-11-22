@@ -83,19 +83,32 @@ export function ProfilePage({ user, onLogout, onNavigateToSeller, onViewProperty
     }
   }, [user?.id])
 
+  // Don't poll if already approved
+  useEffect(() => {
+    if (kycStatus?.status === 'approved') {
+      // Status is already approved, no need to poll
+      return
+    }
+  }, [kycStatus])
+
   const loadKYCStatus = async () => {
     try {
-      const status = await kycService.getKYCStatus(user.id)
+      const statusResponse = await kycService.getKYCStatus(user.id)
+      const status = statusResponse.data || statusResponse
+      console.log('📊 KYC Status loaded:', status)
       setKycStatus(status)
+      return status
     } catch (error) {
       console.error('Error loading KYC status:', error)
       // Set default status on error
-      setKycStatus({
+      const defaultStatus = {
         status: 'not_started',
         level: 1,
         transactionLimit: 5000,
         retryCount: 0,
-      })
+      }
+      setKycStatus(defaultStatus)
+      return defaultStatus
     }
   }
 
@@ -105,16 +118,20 @@ export function ProfilePage({ user, onLogout, onNavigateToSeller, onViewProperty
       const response = await kycService.startKYC(user.id, 1)
 
       // Open Veriff verification URL in a new window
-      if (response.kycUrl) {
-        const veriffWindow = window.open(response.kycUrl, '_blank', 'width=600,height=800')
+      const kycUrl = response.data?.kycUrl || response.kycUrl
+      if (kycUrl) {
+        const veriffWindow = window.open(kycUrl, '_blank', 'width=600,height=800')
 
         // Poll for KYC status updates
         const pollInterval = setInterval(async () => {
-          const status = await kycService.getKYCStatus(user.id)
-          setKycStatus(status)
+          const statusResponse = await kycService.getKYCStatus(user.id)
+          const kycData = statusResponse.data || statusResponse
+          console.log('KYC Status Poll:', kycData) // Debug log
+          setKycStatus(kycData)
 
           // Stop polling if status changed from pending
-          if (status.status !== 'pending') {
+          if (kycData.status !== 'pending') {
+            console.log('KYC Status changed, closing window. Status:', kycData.status) // Debug log
             clearInterval(pollInterval)
             if (veriffWindow && !veriffWindow.closed) {
               veriffWindow.close()
