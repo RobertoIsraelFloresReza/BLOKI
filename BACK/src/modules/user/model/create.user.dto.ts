@@ -100,4 +100,14 @@ export class CreateUserDto extends CreateDto {
   @IsOptional()
   @IsString()
   stellarPublicKey?: string;
+
+  @ApiProperty({
+    description: 'Stellar secret key (encrypted)',
+    example: 'iv:authTag:encrypted',
+    type: String,
+    required: false
+  })
+  @IsOptional()
+  @IsString()
+  stellarSecretKeyEncrypted?: string;
 }

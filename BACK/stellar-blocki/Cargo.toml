@@ -5,6 +5,7 @@ members = [
     "contracts/core/marketplace",
     "contracts/core/escrow",
     "contracts/core/registry",
+    "contracts/core/usdc-mock",
     "contracts/utils/deployer",
     "contracts/utils/storage",
     "contracts/utils/events",

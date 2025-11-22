@@ -1,0 +1,22 @@
+{
+  "id": 10,
+  "contractId": "PENDING_1763745288710_PROP-1763745287862",
+  "propertyId": "PROP-1763745287862",
+  "name": "Casa Moderna en Polanco",
+  "description": "Casa de 3 recámaras con jardín, ubicada en una de las mejores zonas de CDMX",
+  "address": "Av. Polanco 123, Miguel Hidalgo, CDMX",
+  "totalSupply": "1000000000",
+  "valuation": "50000000000000",
+  "decimals": 7,
+  "legalOwner": "Isaac Levsek",
+  "verified": false,
+  "adminAddress": "GBMYHVI2NPQNBHTPTPJAWDDVOSFNHU6Q3KSAU5CTILSUNNGDAHEPIB3Y",
+  "metadata": "{\"bedrooms\":3,\"bathrooms\":2,\"area\":250,\"category\":\"houses\",\"yearBuilt\":2020,\"parkingSpaces\":2}",
+  "registryTxHash": null,
+  "images": null,
+  "valuationDocument": null,
+  "evaluatorId": null,
+  "verificationId": null,
+  "createdAt": "2025-11-21T17:14:49.290Z",
+  "updatedAt": "2025-11-21T17:14:48.722Z"
+}

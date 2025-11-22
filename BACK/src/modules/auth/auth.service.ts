@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { LoginDTO } from './models/dto/login.dto';
 import { RegisterDTO } from './models/dto/register.dto';
@@ -47,9 +48,11 @@ export class AuthService {
         email: user.email,
         name: user.name,
         stellarPublicKey: user.stellarPublicKey,
+        walletAddress: user.stellarPublicKey, // Alias for frontend compatibility
         kycStatus: user.kycStatus,
       },
       access_token,
+      token: access_token, // Alias for frontend compatibility
     };
   }
 
@@ -77,6 +80,7 @@ export class AuthService {
       email: data.email,
       password: data.password, // UserService will hash the password
       stellarPublicKey: stellarKeypair.publicKey,
+      stellarSecretKeyEncrypted: encryptedSecretKey, // Store encrypted secret key
       siteId: 1, // Default site for simplified auth
     });
 
@@ -98,6 +102,15 @@ export class AuthService {
         // Log but don't fail registration if funding fails
         console.warn('Failed to fund account with Friendbot:', error.message);
       }
+
+      // Mint USDC mock tokens for testing (10,000 USDC)
+      try {
+        await this.stellarService.mintUsdcMock(stellarKeypair.publicKey, 10000);
+        console.log(`Minted 10,000 USDC mock tokens to ${stellarKeypair.publicKey}`);
+      } catch (error) {
+        // Log but don't fail registration if USDC minting fails
+        console.warn('Failed to mint USDC mock tokens:', error.message);
+      }
     }
 
     return {
@@ -106,9 +119,11 @@ export class AuthService {
         email: newUser.email,
         name: newUser.name,
         stellarPublicKey: stellarKeypair.publicKey,
+        walletAddress: stellarKeypair.publicKey, // Alias for frontend compatibility
         kycStatus: newUser.kycStatus,
       },
       access_token,
+      token: access_token, // Alias for frontend compatibility
       stellarWallet: {
         publicKey: stellarKeypair.publicKey,
         // IMPORTANT: Secret key should be stored encrypted and never returned in production
@@ -158,13 +173,39 @@ export class AuthService {
       throw new UnauthorizedException('Invalid user');
     }
 
+    // Return user directly (consistent with login/register)
     return {
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-      },
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      stellarPublicKey: user.stellarPublicKey,
+      walletAddress: user.stellarPublicKey, // Alias for frontend compatibility
+      kycStatus: user.kycStatus,
     };
+  }
+
+  async getDecryptedSecretKey(userId: number) {
+    const user = await this.userService.findById(userId, true); // true para incluir fields con select: false
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid user');
+    }
+
+    if (!user.stellarSecretKeyEncrypted) {
+      throw new BadRequestException('User does not have a custodial wallet');
+    }
+
+    try {
+      const decryptedSecretKey = this.decryptSecretKey(user.stellarSecretKeyEncrypted);
+
+      return {
+        stellarPublicKey: user.stellarPublicKey,
+        stellarSecretKey: decryptedSecretKey,
+        warning: 'NEVER share your secret key! This endpoint should only be used by the platform for authorized transactions.',
+      };
+    } catch (error) {
+      throw new BadRequestException('Failed to decrypt secret key');
+    }
   }
 
   async logout() {
@@ -220,9 +261,11 @@ export class AuthService {
         email: user.email,
         name: user.name,
         stellarPublicKey: user.stellarPublicKey,
+        walletAddress: user.stellarPublicKey, // Alias for frontend compatibility
         kycStatus: user.kycStatus,
       },
       access_token,
+      token: access_token, // Alias for frontend compatibility
     };
   }
 }

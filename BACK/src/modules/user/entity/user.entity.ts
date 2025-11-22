@@ -16,6 +16,20 @@ export class UserEntity extends Base {
   stellarPublicKey: string;
 
   @ApiProperty({
+    description: 'Stellar secret key (encrypted with AES-256-GCM)',
+    example: 'iv:authTag:encrypted',
+    type: String,
+    required: false
+  })
+  @Column({
+    name: 'stellar_secret_key_encrypted',
+    type: 'text',
+    nullable: true,
+    select: false // No incluir en queries por defecto (seguridad)
+  })
+  stellarSecretKeyEncrypted: string;
+
+  @ApiProperty({
     description: 'Email del usuario',
     example: 'usuario@ejemplo.com',
     type: String

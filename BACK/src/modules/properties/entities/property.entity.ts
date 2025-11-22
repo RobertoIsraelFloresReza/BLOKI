@@ -5,9 +5,12 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  ManyToOne,
+  JoinColumn,
 } from 'typeorm';
 import { OwnershipEntity } from '../../ownership/entities/ownership.entity';
 import { ListingEntity } from '../../marketplace/entities/listing.entity';
+import { EvaluatorEntity } from '../../evaluators/entities/evaluator.entity';
 
 @Entity('properties')
 export class PropertyEntity {
@@ -55,6 +58,19 @@ export class PropertyEntity {
 
   @Column({ type: 'simple-array', nullable: true })
   images: string[];
+
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  valuationDocument: string;
+
+  @Column({ type: 'int', nullable: true })
+  evaluatorId: number;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  verificationId: string;
+
+  @ManyToOne(() => EvaluatorEntity, (evaluator) => evaluator.properties, { nullable: true })
+  @JoinColumn({ name: 'evaluatorId' })
+  evaluator: EvaluatorEntity;
 
   @CreateDateColumn()
   createdAt: Date;

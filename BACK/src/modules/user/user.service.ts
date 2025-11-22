@@ -81,6 +81,28 @@ export class UserService extends BaseService<UserEntity, CreateUserDto, UpdateUs
   }
 
 
+  async findById(id: number, includeSecretFields: boolean = false): Promise<UserEntity> {
+    try {
+      const queryBuilder = this.userRepository.createQueryBuilder('user').where('user.id = :id', { id });
+
+      if (includeSecretFields) {
+        // Incluir campos con select: false
+        queryBuilder.addSelect('user.stellarSecretKeyEncrypted');
+      }
+
+      const user = await queryBuilder.getOne();
+
+      if (!user) {
+        throw new NotFoundCustomException(NotFoundCustomExceptionType.USER);
+      }
+
+      return user;
+    } catch (error) {
+      HandleException.exception(error);
+      throw error; // Re-throw para que TypeScript entienda que siempre retorna o lanza error
+    }
+  }
+
   async findByIdWithDetails(id: number) {
     try {
       const user = await this.userRepository.findOne({

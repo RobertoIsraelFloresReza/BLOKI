@@ -20,6 +20,9 @@ import { AnchorsModule } from './modules/anchors/anchors.module';
 import { AdminModule } from './modules/admin/admin.module';
 import { EscrowModule } from './modules/escrow/escrow.module';
 import { RegistryModule } from './modules/registry/registry.module';
+import { EvaluatorsModule } from './modules/evaluators/evaluators.module';
+import { CloudflareModule } from './modules/cloudflare/cloudflare.module';
+import { MediaModule } from './modules/media/media.module';
 import { PausableGuard } from './common/guards/pausable.guard';
 import { AuthGuard } from './modules/auth/guard/auth.guard';
 
@@ -41,6 +44,9 @@ import { AuthGuard } from './modules/auth/guard/auth.guard';
     AdminModule,
     EscrowModule,
     RegistryModule,
+    EvaluatorsModule,
+    CloudflareModule,
+    MediaModule,
   ],
   controllers: [AppController],
   providers: [

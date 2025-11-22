@@ -72,7 +72,7 @@ export class KYCService {
       // Crear objeto de datos de verificación
       const verificationData = {
         country: country || user.country || 'Mexico',
-        redirectUrl: redirectUrl || `${process.env.APP_URL || 'http://localhost:3000'}/kyc-callback`,
+        redirectUrl: redirectUrl || `${process.env.FRONTEND_URL || 'http://localhost:3000'}/profile`,
       };
 
       // Llamar al proveedor KYC para crear sesión
@@ -90,6 +90,7 @@ export class KYCService {
         level,
         provider: this.kycProvider,
         sessionId,
+        externalVerificationId: externalResponse.verificationId, // Veriff session ID
         status: KYCStatus.PENDING,
         verificationUrl: externalResponse.verificationUrl,
         verificationData: JSON.stringify(verificationData),
@@ -123,6 +124,18 @@ export class KYCService {
   }
 
   /**
+   * Obtiene la última verificación KYC del usuario
+   * @param userId ID del usuario
+   * @returns Última verificación KYC o null
+   */
+  async getLatestVerification(userId: number) {
+    return await this.kycRepository.findOne({
+      where: { userId },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  /**
    * Obtiene el estado actual de verificación KYC
    * @param userId ID del usuario
    * @returns Estado actual del KYC
@@ -146,6 +159,58 @@ export class KYCService {
         retryCount: 0,
         expiresAt: new Date(),
       };
+    }
+
+    // Si está pendiente, consultar status en Veriff
+    if (kycVerification.status === KYCStatus.PENDING) {
+      this.logger.log(`KYC is PENDING, checking Veriff status. externalVerificationId: ${kycVerification.externalVerificationId}`);
+
+      // Si no tiene externalVerificationId, extraerlo del JWT en verificationUrl
+      if (!kycVerification.externalVerificationId && kycVerification.verificationUrl) {
+        this.logger.log('externalVerificationId no existe, extrayendo del JWT...');
+        try {
+          const jwtToken = kycVerification.verificationUrl.split('/v/')[1];
+          if (jwtToken) {
+            const parts = jwtToken.split('.');
+            const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+            kycVerification.externalVerificationId = payload.session_id;
+            await this.kycRepository.save(kycVerification);
+            this.logger.log(`✅ externalVerificationId extraído y guardado: ${kycVerification.externalVerificationId}`);
+          }
+        } catch (error) {
+          this.logger.error(`Error extrayendo externalVerificationId del JWT: ${error.message}`);
+        }
+      }
+
+      if (kycVerification.externalVerificationId) {
+        try {
+          this.logger.log(`Consultando Veriff API para verificationId: ${kycVerification.externalVerificationId}`);
+          const veriffStatus = await this.checkVeriffStatus(kycVerification.externalVerificationId);
+          this.logger.log(`Veriff respondió con status: ${veriffStatus}`);
+
+          // Si el status cambió en Veriff, actualizar en BD
+          if (veriffStatus && veriffStatus !== kycVerification.status) {
+            this.logger.log(`Status cambió en Veriff: ${veriffStatus} para sesión ${kycVerification.sessionId}`);
+
+            kycVerification.status = veriffStatus;
+            kycVerification.completedAt = new Date();
+
+            await this.kycRepository.save(kycVerification);
+            await this.userRepository.update({ id: userId }, {
+              kycStatus: veriffStatus,
+              kycVerifiedAt: new Date(),
+            });
+          } else {
+            this.logger.log(`Status NO cambió. BD: ${kycVerification.status}, Veriff: ${veriffStatus}`);
+          }
+        } catch (error) {
+          this.logger.error(`Error consultando Veriff status: ${error.message}`, error.stack);
+        }
+      } else {
+        this.logger.warn(`No se pudo obtener externalVerificationId para el usuario ${userId}`);
+      }
+    } else {
+      this.logger.log(`KYC status is ${kycVerification.status}, no need to check Veriff`);
     }
 
     // Validar si la sesión ha expirado
@@ -285,6 +350,66 @@ export class KYCService {
     });
   }
 
+  /**
+   * Extrae el externalVerificationId del JWT en verificationUrl y actualiza la BD
+   * Útil para fixear sesiones antiguas creadas antes de guardar el externalVerificationId
+   */
+  async fixExternalVerificationId(userId: number) {
+    this.logger.log(`Fixing externalVerificationId para usuario ${userId}`);
+
+    const kycVerification = await this.kycRepository.findOne({
+      where: { userId },
+      order: { createdAt: 'DESC' },
+    });
+
+    if (!kycVerification) {
+      throw new NotFoundException('No se encontró verificación KYC para este usuario');
+    }
+
+    if (kycVerification.externalVerificationId) {
+      return {
+        message: 'Ya tiene externalVerificationId',
+        externalVerificationId: kycVerification.externalVerificationId,
+      };
+    }
+
+    // Extraer JWT del verificationUrl
+    const jwtToken = kycVerification.verificationUrl?.split('/v/')[1];
+    if (!jwtToken) {
+      throw new BadRequestException('No se pudo extraer JWT del verificationUrl');
+    }
+
+    this.logger.log(`JWT extraído: ${jwtToken.substring(0, 50)}...`);
+
+    // Decodificar JWT
+    const parts = jwtToken.split('.');
+    if (parts.length !== 3) {
+      throw new BadRequestException('Formato JWT inválido');
+    }
+
+    const payload = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf8'));
+    this.logger.log(`JWT decoded: ${JSON.stringify(payload)}`);
+
+    const externalVerificationId = payload.session_id;
+    if (!externalVerificationId) {
+      throw new BadRequestException('No se encontró session_id en el JWT');
+    }
+
+    this.logger.log(`Actualizando externalVerificationId: ${externalVerificationId}`);
+
+    // Actualizar en BD
+    kycVerification.externalVerificationId = externalVerificationId;
+    await this.kycRepository.save(kycVerification);
+
+    this.logger.log(`✅ externalVerificationId actualizado exitosamente`);
+
+    return {
+      message: 'externalVerificationId actualizado exitosamente',
+      userId,
+      externalVerificationId,
+    };
+  }
+
   // ==================== MÉTODOS PRIVADOS ====================
 
   /**
@@ -298,7 +423,7 @@ export class KYCService {
    * Comunica con Veriff API para crear sesión de verificación
    * Documentación: https://developers.veriff.com/#sessions
    */
-  private async createKYCSessionWithProvider(data: any): Promise<{ verificationUrl: string }> {
+  private async createKYCSessionWithProvider(data: any): Promise<{ verificationUrl: string; verificationId: string }> {
     try {
       if (!this.kycApiKey) {
         this.logger.error('VERIFF_API_KEY no configurado');
@@ -335,13 +460,77 @@ export class KYCService {
       }
 
       const veriffResponse = await response.json();
+      this.logger.log(`Veriff response completa: ${JSON.stringify(veriffResponse)}`);
+      this.logger.log(`Veriff verification.id: ${veriffResponse.verification?.id}`);
+      this.logger.log(`Veriff verification.url: ${veriffResponse.verification?.url}`);
 
       return {
         verificationUrl: veriffResponse.verification.url,
+        verificationId: veriffResponse.verification.id, // Veriff session ID
       };
     } catch (error) {
       this.logger.error(`Error comunicando con Veriff: ${error.message}`);
       throw error;
+    }
+  }
+
+  /**
+   * Consulta el status de verificación en Veriff API
+   * Documentación: https://developers.veriff.com/#decision-api
+   */
+  private async checkVeriffStatus(verificationId: string): Promise<KYCStatus | null> {
+    try {
+      const url = `${this.kycApiUrl}/v1/sessions/${verificationId}/decision`;
+
+      // Generar HMAC signature: debe firmar el session_id con el secret key
+      const signature = crypto
+        .createHmac('sha256', this.kycWebhookSecret)
+        .update(verificationId)
+        .digest('hex');
+
+      this.logger.log(`Haciendo fetch a Veriff: ${url}`);
+      this.logger.log(`Session ID a firmar: ${verificationId}`);
+      this.logger.log(`HMAC Signature: ${signature}`);
+
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'X-AUTH-CLIENT': this.kycApiKey,
+          'X-HMAC-SIGNATURE': signature,
+        },
+      });
+
+      this.logger.log(`Veriff respondió con status HTTP: ${response.status}`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        this.logger.warn(`Veriff API error: ${response.status} - ${errorText}`);
+        return null;
+      }
+
+      const data = await response.json();
+      this.logger.log(`Veriff data: ${JSON.stringify(data)}`);
+
+      // Si verification es null, significa que el usuario aún no ha completado la verificación
+      if (!data.verification) {
+        this.logger.log('Verification es null - usuario no ha completado KYC');
+        return null;
+      }
+
+      // Map Veriff status to our KYCStatus enum
+      if (data.verification.status === 'approved') {
+        this.logger.log('Veriff status: APPROVED');
+        return KYCStatus.APPROVED;
+      } else if (data.verification.status === 'declined') {
+        this.logger.log('Veriff status: DECLINED');
+        return KYCStatus.REJECTED;
+      }
+
+      this.logger.log(`Veriff status desconocido: ${data.verification.status}`);
+      return null;
+    } catch (error) {
+      this.logger.error(`Error checking Veriff status: ${error.message}`, error.stack);
+      return null;
     }
   }
 

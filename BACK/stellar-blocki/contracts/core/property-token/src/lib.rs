@@ -68,6 +68,19 @@ impl PropertyTokenContract {
             .instance()
             .set(&Symbol::new(&env, "metadata"), &metadata);
 
+        // Mint all tokens to admin automatically (decentralized pattern)
+        // This ensures the property owner receives all tokens in a single transaction
+        storage::set_balance(&env, &admin, total_supply);
+        env.storage().persistent().set(&DataKey::TotalMinted, &total_supply);
+
+        // Track admin as owner
+        let mut owners_list = Vec::new(&env);
+        owners_list.push_back(admin.clone());
+        env.storage().persistent().set(&DataKey::OwnersList, &owners_list);
+
+        // Emit mint event
+        events::mint(&env, admin.clone(), total_supply);
+
         // Mark as initialized
         storage::set_initialized(&env);
 

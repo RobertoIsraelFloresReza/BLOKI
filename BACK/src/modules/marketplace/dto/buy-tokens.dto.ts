@@ -4,7 +4,7 @@ import { ApiProperty } from '@nestjs/swagger';
 export class BuyTokensDto {
   @ApiProperty({ example: 12345 })
   @IsNumber()
-  @Min(1)
+  @Min(0)
   listingId: number;
 
   @ApiProperty({ example: 5 })

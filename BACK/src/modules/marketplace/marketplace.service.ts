@@ -61,20 +61,42 @@ export class MarketplaceService {
   }
 
   async buyTokens(buyTokensDto: BuyTokensDto) {
-    const listing = await this.listingRepository.findOne({
-      where: { listingId: buyTokensDto.listingId.toString() },
-      relations: ['property'],
-    });
+    try {
+      const listing = await this.listingRepository.findOne({
+        where: { listingId: buyTokensDto.listingId.toString() },
+        relations: ['property'],
+      });
 
-    if (!listing) throw new NotFoundException('Listing not found');
-    if (listing.status !== ListingStatus.ACTIVE) throw new BadRequestException('Listing not active');
+      if (!listing) throw new NotFoundException('Listing not found');
+      if (listing.status !== ListingStatus.ACTIVE) throw new BadRequestException('Listing not active');
 
-    const buyerKeypair = Keypair.fromSecret(buyTokensDto.buyerSecretKey);
-    const txHash = await this.stellarService.buyFromListing(
-      buyTokensDto.buyerSecretKey,
-      buyTokensDto.listingId,
-      buyTokensDto.amount,
-    );
+      this.logger.log(`Attempting to buy ${buyTokensDto.amount} tokens from listing ${buyTokensDto.listingId}`);
+
+      const buyerKeypair = Keypair.fromSecret(buyTokensDto.buyerSecretKey);
+
+      // Calculate total price needed
+      const pricePerToken = parseFloat(listing.pricePerToken);
+      const totalPrice = buyTokensDto.amount * pricePerToken;
+
+      this.logger.log(`Total price: ${totalPrice} USDC (${buyTokensDto.amount} tokens × ${pricePerToken} USDC/token)`);
+
+      // Approve USDC allowance for marketplace (in testnet, this auto-mints if needed)
+      try {
+        this.logger.log(`Approving ${totalPrice} USDC for marketplace...`);
+        await this.stellarService.approveUsdcForMarketplace(buyTokensDto.buyerSecretKey, totalPrice);
+        this.logger.log('USDC allowance approved');
+      } catch (error) {
+        this.logger.error(`Failed to approve USDC allowance: ${error.message}`);
+        throw new BadRequestException(`Failed to approve USDC allowance: ${error.message}`);
+      }
+
+      const txHash = await this.stellarService.buyFromListing(
+        buyTokensDto.buyerSecretKey,
+        buyTokensDto.listingId,
+        buyTokensDto.amount,
+      );
+
+      this.logger.log(`Buy transaction successful: ${txHash}`);
 
     const transaction = this.transactionRepository.create({
       txHash,
@@ -92,8 +114,12 @@ export class MarketplaceService {
     listing.amount = (newAmount * 10000000).toString();
     if (newAmount <= 0) listing.status = ListingStatus.SOLD;
 
-    await this.listingRepository.save(listing);
-    return { transaction, listing };
+      await this.listingRepository.save(listing);
+      return { transaction, listing };
+    } catch (error) {
+      this.logger.error(`Error in buyTokens: ${error.message}`, error.stack);
+      throw error;
+    }
   }
 
   async findAll(status?: ListingStatus): Promise<ListingEntity[]> {

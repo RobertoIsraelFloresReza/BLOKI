@@ -16,6 +16,7 @@ export class StellarService {
     MARKETPLACE: string;
     DEPLOYER: string;
   };
+  private platformKeypair: StellarSdk.Keypair;
 
   constructor(private configService: ConfigService) {
     this.rpcUrl = this.configService.get<string>('STELLAR_RPC_URL') || 'https://soroban-testnet.stellar.org';
@@ -29,6 +30,13 @@ export class StellarService {
       MARKETPLACE: this.configService.get<string>('MARKETPLACE_CONTRACT_ID') || '',
       DEPLOYER: this.configService.get<string>('DEPLOYER_CONTRACT_ID') || '',
     };
+
+    // Initialize platform keypair for deployer operations
+    const platformSecretKey = this.configService.get<string>('PLATFORM_SECRET_KEY');
+    if (platformSecretKey) {
+      this.platformKeypair = StellarSdk.Keypair.fromSecret(platformSecretKey);
+      this.logger.log(`Platform account loaded: ${this.platformKeypair.publicKey()}`);
+    }
   }
 
   generateKeypair(): { publicKey: string; secretKey: string } {
@@ -100,18 +108,26 @@ export class StellarService {
     try {
       const adminKeypair = StellarSdk.Keypair.fromSecret(adminSecretKey);
 
+      // Verify platform keypair is initialized
+      if (!this.platformKeypair) {
+        this.logger.error('Platform keypair is not initialized. Check PLATFORM_SECRET_KEY in .env');
+        throw new Error('Platform keypair is not configured');
+      }
+
       // Generate random salt (32 bytes)
       const saltSource = `${propertyId}-${Date.now()}-${Math.random()}`;
       const salt = StellarSdk.hash(Buffer.from(saltSource));
 
       // Deploy contract with only property_id (as Symbol) and salt
+      // IMPORTANT: Use platform keypair as it's the admin of the Deployer contract
       const deployOperation = new StellarSdk.Contract(this.CONTRACTS.DEPLOYER).call(
         'deploy_property_token',
         StellarSdk.nativeToScVal(`PROP${propertyId}`, { type: 'symbol' }),
         StellarSdk.xdr.ScVal.scvBytes(salt)
       );
 
-      const deployTxHash = await this.submitTransaction(adminKeypair, deployOperation);
+      this.logger.log(`Deploying with platform account: ${this.platformKeypair.publicKey()}`);
+      const deployTxHash = await this.submitTransaction(this.platformKeypair, deployOperation);
       this.logger.log(`Deploy transaction submitted: ${deployTxHash}`);
 
       // Get the deployed contract address from transaction result
@@ -128,6 +144,8 @@ export class StellarService {
       }
 
       // Initialize the deployed contract
+      // NOTE: The PropertyToken contract automatically mints all tokens to the admin during initialization
+      // This follows a decentralized pattern where a single transaction signed by the user creates and mints tokens
       this.logger.log('Initializing deployed contract...');
       const initTxHash = await this.initializePropertyToken(
         adminSecretKey,
@@ -138,6 +156,7 @@ export class StellarService {
         totalSupply
       );
       this.logger.log(`Initialization transaction: ${initTxHash}`);
+      this.logger.log(`All ${totalSupply} tokens automatically minted to admin during initialization`);
 
       return { txHash: initTxHash, contractId: deployedAddress };
     } catch (error) {
@@ -149,6 +168,17 @@ export class StellarService {
   async initializePropertyToken(adminSecretKey: string, contractId: string, propertyId: number, name: string, symbol: string, totalSupply: number): Promise<string> {
     const adminKeypair = StellarSdk.Keypair.fromSecret(adminSecretKey);
     const operation = new StellarSdk.Contract(contractId).call('initialize', new StellarSdk.Address(adminKeypair.publicKey()).toScVal(), StellarSdk.nativeToScVal(`PROP${propertyId}`, { type: 'symbol' }), StellarSdk.nativeToScVal(name, { type: 'string' }), StellarSdk.nativeToScVal(symbol, { type: 'string' }), StellarSdk.nativeToScVal(totalSupply * 10000000, { type: 'i128' }));
+    return await this.submitTransaction(adminKeypair, operation);
+  }
+
+  async mintPropertyTokens(adminSecretKey: string, contractId: string, toAddress: string, amount: number, percentage: number): Promise<string> {
+    const adminKeypair = StellarSdk.Keypair.fromSecret(adminSecretKey);
+    const operation = new StellarSdk.Contract(contractId).call(
+      'mint',
+      new StellarSdk.Address(toAddress).toScVal(),
+      StellarSdk.nativeToScVal(amount * 10000000, { type: 'i128' }),
+      StellarSdk.nativeToScVal(percentage, { type: 'i128' })
+    );
     return await this.submitTransaction(adminKeypair, operation);
   }
 
@@ -180,15 +210,97 @@ export class StellarService {
 
   async createListing(sellerSecretKey: string, tokenContractId: string, amount: number, pricePerToken: number, expirationDays: number): Promise<{ txHash: string; listingId: number }> {
     const sellerKeypair = StellarSdk.Keypair.fromSecret(sellerSecretKey);
-    const expirationTimestamp = Math.floor(Date.now() / 1000) + (expirationDays * 24 * 60 * 60);
-    const operation = new StellarSdk.Contract(this.CONTRACTS.MARKETPLACE).call('create_listing', new StellarSdk.Address(sellerKeypair.publicKey()).toScVal(), new StellarSdk.Address(tokenContractId).toScVal(), StellarSdk.nativeToScVal(amount * 10000000, { type: 'i128' }), StellarSdk.nativeToScVal(Math.round(pricePerToken * 10000000), { type: 'i128' }), StellarSdk.nativeToScVal(expirationTimestamp, { type: 'u64' }));
+    // Call the correct contract method: list_property
+    const operation = new StellarSdk.Contract(this.CONTRACTS.MARKETPLACE).call(
+      'list_property',
+      new StellarSdk.Address(sellerKeypair.publicKey()).toScVal(),
+      new StellarSdk.Address(tokenContractId).toScVal(),
+      StellarSdk.nativeToScVal(amount * 10000000, { type: 'i128' }),
+      StellarSdk.nativeToScVal(Math.round(pricePerToken * 10000000), { type: 'i128' })
+    );
     const txHash = await this.submitTransaction(sellerKeypair, operation);
-    return { txHash, listingId: Math.floor(Date.now() / 1000) };
+
+    // Get the listing ID from the transaction result
+    const txResponse = await this.server.getTransaction(txHash);
+    let listingId: number;
+
+    if (txResponse.returnValue) {
+      listingId = Number(StellarSdk.scValToNative(txResponse.returnValue));
+      this.logger.log(`Listing created with ID: ${listingId}`);
+    } else {
+      // Fallback to timestamp if no return value
+      listingId = Math.floor(Date.now() / 1000);
+    }
+
+    return { txHash, listingId };
   }
 
-  async buyFromListing(buyerSecretKey: string, listingId: number, amount: number): Promise<string> {
+  async buyFromListing(buyerSecretKey: string, listingId: number, amount: number, usdcTokenAddress?: string): Promise<string> {
     const buyerKeypair = StellarSdk.Keypair.fromSecret(buyerSecretKey);
-    const operation = new StellarSdk.Contract(this.CONTRACTS.MARKETPLACE).call('buy_tokens', new StellarSdk.Address(buyerKeypair.publicKey()).toScVal(), StellarSdk.nativeToScVal(listingId, { type: 'u64' }), StellarSdk.nativeToScVal(amount * 10000000, { type: 'i128' }));
+    const usdcAddress = usdcTokenAddress || this.configService.get<string>('USDC_MOCK_CONTRACT_ID');
+
+    if (!usdcAddress) {
+      throw new Error('USDC contract address not configured');
+    }
+
+    this.logger.log(`Buyer ${buyerKeypair.publicKey()} attempting to buy ${amount} tokens from listing ${listingId}`);
+
+    const operation = new StellarSdk.Contract(this.CONTRACTS.MARKETPLACE).call(
+      'buy_tokens',
+      new StellarSdk.Address(buyerKeypair.publicKey()).toScVal(),
+      StellarSdk.nativeToScVal(listingId, { type: 'u64' }),
+      StellarSdk.nativeToScVal(amount * 10000000, { type: 'i128' }),
+      new StellarSdk.Contract(usdcAddress).address().toScVal()
+    );
+    return await this.submitTransaction(buyerKeypair, operation);
+  }
+
+  /**
+   * Mint USDC mock tokens to an address (for testing only)
+   * In production, users would acquire USDC through other means
+   */
+  async mintUsdcMock(toAddress: string, amount: number): Promise<string> {
+    const usdcContractId = this.configService.get<string>('USDC_MOCK_CONTRACT_ID');
+    if (!usdcContractId) {
+      throw new Error('USDC_MOCK_CONTRACT_ID not configured');
+    }
+
+    this.logger.log(`Minting ${amount} USDC mock tokens to ${toAddress}`);
+
+    const operation = new StellarSdk.Contract(usdcContractId).call(
+      'mint',
+      new StellarSdk.Address(toAddress).toScVal(),
+      StellarSdk.nativeToScVal(amount * 10000000, { type: 'i128' })
+    );
+
+    // Use platform keypair to mint (in this mock, anyone can mint, but we use platform for consistency)
+    return await this.submitTransaction(this.platformKeypair, operation);
+  }
+
+  /**
+   * Approve USDC allowance for marketplace contract
+   * This allows the marketplace to transfer USDC from the buyer when purchasing tokens
+   */
+  async approveUsdcForMarketplace(buyerSecretKey: string, amount: number): Promise<string> {
+    const usdcContractId = this.configService.get<string>('USDC_MOCK_CONTRACT_ID');
+    if (!usdcContractId) {
+      throw new Error('USDC_MOCK_CONTRACT_ID not configured');
+    }
+
+    const buyerKeypair = StellarSdk.Keypair.fromSecret(buyerSecretKey);
+    const marketplaceAddress = this.CONTRACTS.MARKETPLACE;
+
+    this.logger.log(`Approving ${amount} USDC for marketplace on behalf of ${buyerKeypair.publicKey()}`);
+
+    // Approve with high expiration ledger (1 year ~ 5256000 ledgers)
+    const operation = new StellarSdk.Contract(usdcContractId).call(
+      'approve',
+      new StellarSdk.Address(buyerKeypair.publicKey()).toScVal(),
+      new StellarSdk.Contract(marketplaceAddress).address().toScVal(),
+      StellarSdk.nativeToScVal(amount * 10000000, { type: 'i128' }),
+      StellarSdk.nativeToScVal(5256000, { type: 'u32' })
+    );
+
     return await this.submitTransaction(buyerKeypair, operation);
   }
 

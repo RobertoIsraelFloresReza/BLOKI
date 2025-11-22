@@ -1,0 +1,14 @@
+{
+  "user": {
+    "id": 29,
+    "email": "test_1763745259715@blocki.tech",
+    "name": "Isaac",
+    "stellarPublicKey": "GBMYHVI2NPQNBHTPTPJAWDDVOSFNHU6Q3KSAU5CTILSUNNGDAHEPIB3Y",
+    "walletAddress": "GBMYHVI2NPQNBHTPTPJAWDDVOSFNHU6Q3KSAU5CTILSUNNGDAHEPIB3Y",
+    "kycStatus": "not_started"
+  },
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MjksImVtYWlsIjoidGVzdF8xNzYzNzQ1MjU5NzE1QGJsb2NraS50ZWNoIiwibmFtZSI6IklzYWFjIiwic3RlbGxhclB1YmxpY0tleSI6IkdCTVlIVkkyTlBRTkJIVFBUUEpBV0REVk9TRk5IVTZRM0tTQVU1Q1RJTFNVTk5HREFIRVBJQjNZIiwiaWF0IjoxNzYzNzQ1MjYwLCJleHAiOjE3NjM4MzE2NjB9.D3cMhQYblHs6yA2ZubTipbd8GoLh_pNK2Chqf-WiR-8",
+  "tokenFromLogin": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MjksImVtYWlsIjoidGVzdF8xNzYzNzQ1MjU5NzE1QGJsb2NraS50ZWNoIiwibmFtZSI6IklzYWFjIiwiaWF0IjoxNzYzNzQ1MjY4LCJleHAiOjE3NjM4MzE2Njh9.jlSbF9LJLVke3zLfPJ6KyjYRO7pPanTU3yU_WyEIELE",
+  "email": "test_1763745259715@blocki.tech",
+  "password": "SecurePass123!"
+}

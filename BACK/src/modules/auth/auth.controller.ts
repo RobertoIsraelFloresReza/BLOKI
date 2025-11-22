@@ -41,9 +41,21 @@ export class AuthController {
     return this.authService.validate(req.user.id);
   }
 
+  @Get('profile')
+  @ApiBody({ required: false })
+  getProfileAlias(@Request() req) {
+    return this.authService.validate(req.user.id);
+  }
+
   @Get('validate')
   validate(@Request() req) {
     return this.authService.validate(req.user.id);
+  }
+
+  @Get('wallet/secret-key')
+  @ApiBody({ required: false })
+  getSecretKey(@Request() req) {
+    return this.authService.getDecryptedSecretKey(req.user.id);
   }
 
   @Post('logout')

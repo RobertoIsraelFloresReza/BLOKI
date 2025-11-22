@@ -37,13 +37,30 @@ export class CreatePropertyDto {
   @IsOptional()
   legalOwner?: string;
 
-  @ApiProperty({ example: 'GABC...' })
-  @IsString()
-  @IsNotEmpty()
-  adminSecretKey: string;
-
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({ example: 'SABC...', description: 'Stellar admin secret key - opcional para crear sin deployment' })
   @IsString()
   @IsOptional()
-  metadata?: string;
+  adminSecretKey?: string;
+
+  @ApiPropertyOptional({ example: 'https://storage.com/valuation.pdf', description: 'URL del documento de evaluación de la propiedad' })
+  @IsString()
+  @IsOptional()
+  valuationDocument?: string;
+
+  @ApiPropertyOptional({ example: 1, description: 'ID del evaluador certificado' })
+  @IsNumber()
+  @IsOptional()
+  evaluatorId?: number;
+
+  @ApiPropertyOptional({ example: 'VER-2025-001234', description: 'ID de verificación de la evaluación' })
+  @IsString()
+  @IsOptional()
+  verificationId?: string;
+
+  @ApiPropertyOptional({
+    example: { bedrooms: 3, bathrooms: 2, area: 120, category: 'houses' },
+    description: 'Metadata as object with custom fields'
+  })
+  @IsOptional()
+  metadata?: any;
 }
