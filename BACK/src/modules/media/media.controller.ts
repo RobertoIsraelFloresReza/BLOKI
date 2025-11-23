@@ -5,13 +5,10 @@ import {
   Body,
   Param,
   Delete,
-  UseInterceptors,
-  UploadedFiles,
   ParseIntPipe,
   Query,
 } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiConsumes, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { MediaService } from './media.service';
 import { CreateMediaDto } from './dto/create-media.dto';
 import { MediaEntityType } from './entity/media.entity';
@@ -22,21 +19,10 @@ import { MediaEntityType } from './entity/media.entity';
 export class MediaController {
   constructor(private readonly mediaService: MediaService) {}
 
-  @Post('upload')
-  @ApiOperation({ summary: 'Upload files to Cloudflare and register in database' })
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(
-    FilesInterceptor('files', 10, {
-      limits: {
-        fileSize: 10 * 1024 * 1024, // 10MB
-      },
-    }),
-  )
-  async uploadFiles(
-    @UploadedFiles() files: Express.Multer.File[],
-    @Body('folder') folder?: string,
-  ) {
-    return await this.mediaService.uploadFiles(files, folder || 'general');
+  @Post('register-urls')
+  @ApiOperation({ summary: 'Register media URLs in database (files already uploaded to Cloudflare)' })
+  async registerUrls(@Body('urls') urls: string[]) {
+    return await this.mediaService.createFromUrls(urls);
   }
 
   @Post()

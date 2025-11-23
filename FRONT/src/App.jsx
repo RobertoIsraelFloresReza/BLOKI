@@ -18,6 +18,7 @@ function AppContent() {
   const { user, logout: logoutMutation, isLoading } = useAuth()
   const [isScrolled, setIsScrolled] = useState(false)
   const [marketplaceFilters, setMarketplaceFilters] = useState({ filters: [], selectedFilter: 'all', onFilterChange: null })
+  const [searchQuery, setSearchQuery] = useState('')
   const [showMobileSearch, setShowMobileSearch] = useState(false)
   const Strings = useStrings()
 
@@ -37,6 +38,12 @@ function AppContent() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Scroll to top when location changes
+  useEffect(() => {
+    // Use instant scroll on page load to avoid race conditions
+    window.scrollTo({ top: 0, behavior: 'instant' })
+  }, [location.pathname])
 
   const handleLogout = () => {
     logoutMutation()
@@ -69,6 +76,8 @@ function AppContent() {
         selectedFilter={marketplaceFilters.selectedFilter}
         onFilterChange={marketplaceFilters.onFilterChange}
         onMobileSearchClick={() => setShowMobileSearch(true)}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
       />
 
       {/* Main Content */}
@@ -84,6 +93,8 @@ function AppContent() {
                 isScrolled={isScrolled}
                 showMobileSearch={showMobileSearch}
                 onCloseMobileSearch={() => setShowMobileSearch(false)}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
               />
             }
           />

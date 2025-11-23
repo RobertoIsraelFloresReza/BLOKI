@@ -25,6 +25,10 @@ import { CloudflareModule } from './modules/cloudflare/cloudflare.module';
 import { MediaModule } from './modules/media/media.module';
 import { PausableGuard } from './common/guards/pausable.guard';
 import { AuthGuard } from './modules/auth/guard/auth.guard';
+import { OracleModule } from './modules/oracle/oracle.module';
+import { DeFindexModule } from './modules/defindex/defindex.module';
+import { SoroswapModule } from './modules/soroswap/soroswap.module';
+import { ZKModule } from './modules/zk/zk.module';
 
 @Module({
   imports: [
@@ -47,6 +51,10 @@ import { AuthGuard } from './modules/auth/guard/auth.guard';
     EvaluatorsModule,
     CloudflareModule,
     MediaModule,
+    OracleModule,
+    DeFindexModule,
+    SoroswapModule,
+    ZKModule,
   ],
   controllers: [AppController],
   providers: [

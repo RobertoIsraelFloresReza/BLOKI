@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { LoaderButton } from '@/components/ui'
+import { useStrings } from '@/utils/localizations/useStrings'
 
 /**
  * OAuth2Callback Component
@@ -12,6 +13,7 @@ export function OAuth2Callback() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const Strings = useStrings()
 
   useEffect(() => {
     const token = searchParams.get('token')
@@ -53,8 +55,8 @@ export function OAuth2Callback() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-accent/5">
       <div className="text-center">
         <LoaderButton className="w-16 h-16 mb-4 mx-auto" />
-        <h2 className="text-2xl font-bold mb-2">Signing you in...</h2>
-        <p className="text-muted-foreground">Please wait while we complete your authentication</p>
+        <h2 className="text-2xl font-bold mb-2">{Strings.signingYouIn}</h2>
+        <p className="text-muted-foreground">{Strings.pleaseWaitAuthentication}</p>
       </div>
     </div>
   )

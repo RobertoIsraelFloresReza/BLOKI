@@ -63,7 +63,7 @@ export class MarketplaceService {
   async buyTokens(buyTokensDto: BuyTokensDto) {
     try {
       const listing = await this.listingRepository.findOne({
-        where: { listingId: buyTokensDto.listingId.toString() },
+        where: { id: buyTokensDto.listingId },
         relations: ['property'],
       });
 
@@ -92,7 +92,7 @@ export class MarketplaceService {
 
       const txHash = await this.stellarService.buyFromListing(
         buyTokensDto.buyerSecretKey,
-        buyTokensDto.listingId,
+        parseInt(listing.listingId),
         buyTokensDto.amount,
       );
 

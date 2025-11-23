@@ -17,3 +17,9 @@ export { useWalletBalance, useWalletTransactions } from './useWallet'
 export { usePropertyOwnership, useOwnerProperties, useSyncOwnership } from './useOwnership'
 export { useEvaluators, useEvaluator, useEvaluatorMutations } from './useEvaluators'
 // export { useKYCStatus, useTransactionLimit, useStartKYC, useRetryKYC } from './useKYC'  // TODO: Create useKYC.js
+
+// DeFi Hooks - NEW
+export { useSoroswap } from './useSoroswap'
+export { useOracle } from './useOracle'
+export { useDeFindex } from './useDeFindex'
+export { useZK } from './useZK'

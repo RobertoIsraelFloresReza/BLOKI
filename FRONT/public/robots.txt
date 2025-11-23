@@ -1,0 +1,11 @@
+# Robots.txt for Blocki - Inversión Inmobiliaria Tokenizada
+
+User-agent: *
+Allow: /
+
+# Disallow admin and API endpoints
+Disallow: /api/
+Disallow: /admin/
+
+# Sitemap location (actualizar con tu dominio en producción)
+Sitemap: https://blocki.app/sitemap.xml

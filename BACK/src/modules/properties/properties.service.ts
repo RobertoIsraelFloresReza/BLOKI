@@ -1,4 +1,4 @@
-import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException, BadRequestException, Inject, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PropertyEntity } from './entities/property.entity';
@@ -6,8 +6,8 @@ import { CreatePropertyDto } from './dto/create-property.dto';
 import { UpdatePropertyDto } from './dto/update-property.dto';
 import { StellarService } from '../stellar/stellar.service';
 import { ConfigService } from '@nestjs/config';
-import { CloudflareService } from '../cloudflare/cloudflare.service';
 import { Keypair } from '@stellar/stellar-sdk';
+import { MarketplaceService } from '../marketplace/marketplace.service';
 
 @Injectable()
 export class PropertiesService {
@@ -18,7 +18,8 @@ export class PropertiesService {
     private propertyRepository: Repository<PropertyEntity>,
     private stellarService: StellarService,
     private configService: ConfigService,
-    private cloudflareService: CloudflareService,
+    @Inject(forwardRef(() => MarketplaceService))
+    private marketplaceService: MarketplaceService,
   ) {}
 
   async create(createPropertyDto: CreatePropertyDto, userStellarPublicKey: string): Promise<PropertyEntity> {
@@ -93,8 +94,32 @@ export class PropertiesService {
         } catch (error) {
           this.logger.warn(`Failed to register in Registry: ${error.message}`);
         }
+
+        // 5. Crear listing automáticamente en el marketplace
+        try {
+          this.logger.log(`Creating automatic marketplace listing for property ${savedProperty.id}`);
+
+          // Calcular precio por token: valuation / totalSupply
+          const pricePerToken = createPropertyDto.valuation / createPropertyDto.totalSupply;
+
+          // Por defecto, listar todos los tokens disponibles
+          const tokensToList = createPropertyDto.totalSupply;
+
+          const listing = await this.marketplaceService.createListing({
+            propertyId: savedProperty.id,
+            amount: tokensToList,
+            pricePerToken: pricePerToken,
+            expirationDays: 365, // 1 año por defecto
+            sellerSecretKey: createPropertyDto.adminSecretKey,
+          });
+
+          this.logger.log(`Automatic listing created: ${listing.id} (blockchain ID: ${listing.listingId})`);
+        } catch (error) {
+          this.logger.warn(`Failed to create automatic listing: ${error.message}`);
+          // No lanzar error - el listing puede crearse manualmente después
+        }
       } else {
-        this.logger.log('Skipping registry registration - no admin secret key');
+        this.logger.log('Skipping registry registration and listing creation - no admin secret key');
       }
 
       return savedProperty;
@@ -217,21 +242,15 @@ export class PropertiesService {
     return [];
   }
 
-  async addImages(id: number, files: Express.Multer.File[]): Promise<PropertyEntity> {
+  async addImages(id: number, imageUrls: string[]): Promise<PropertyEntity> {
     this.logger.log('=== PROPERTY ADD IMAGES START ===');
     this.logger.log(`🏠 Property ID: ${id}`);
-    this.logger.log(`📸 Files received: ${files.length}`);
+    this.logger.log(`📸 URLs received: ${imageUrls.length}`);
 
     const property = await this.findOne(id);
     this.logger.log(`✅ Property found: ${property.name}`);
     this.logger.log(`📷 Current images: ${property.images?.length || 0}`);
 
-    this.logger.log(`🚀 Starting upload to Cloudflare R2...`);
-
-    // Upload all images to Cloudflare R2
-    const imageUrls = await this.cloudflareService.uploadMultipleToCloudflare(files, 'properties');
-
-    this.logger.log(`✅ Successfully uploaded ${imageUrls.length} images to Cloudflare`);
     this.logger.log(`🔗 New URLs: ${JSON.stringify(imageUrls, null, 2)}`);
 
     if (!property.images) {
@@ -249,17 +268,12 @@ export class PropertiesService {
     return savedProperty;
   }
 
-  async addValuationDocument(id: number, file: Express.Multer.File): Promise<PropertyEntity> {
+  async addValuationDocument(id: number, documentUrl: string): Promise<PropertyEntity> {
     const property = await this.findOne(id);
 
-    this.logger.log(`Uploading valuation document for property ${id} to Cloudflare R2`);
+    this.logger.log(`Adding valuation document URL for property ${id}: ${documentUrl}`);
 
-    // Upload document to Cloudflare R2
-    const uploadResult = await this.cloudflareService.uploadToCloudflare(file, 'valuations');
-
-    this.logger.log(`Successfully uploaded valuation document to Cloudflare: ${uploadResult.url}`);
-
-    property.valuationDocument = uploadResult.url;
+    property.valuationDocument = documentUrl;
 
     return this.propertyRepository.save(property);
   }

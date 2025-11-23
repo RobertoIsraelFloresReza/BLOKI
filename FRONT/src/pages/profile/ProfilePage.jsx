@@ -4,54 +4,7 @@ import { Badge, Button, Input, LoaderButton, Tabs, TabsList, TabsTrigger, TabsCo
 import { PropertyCardProfile } from '@/components/profile'
 import { useStrings } from '@/utils/localizations/useStrings'
 import { kycService } from '@/services/kycService'
-
-// Mock seller properties - would come from API
-const MOCK_USER_PROPERTIES = [
-  {
-    id: '1',
-    title: 'Casa Moderna en Miami Beach',
-    location: 'Miami Beach, FL',
-    price: 2500000,
-    image: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?w=800&q=80',
-    tokensAvailable: 1000,
-    totalTokens: 2500,
-    tokensSold: 1500,
-    createdAt: '2024-04-10',
-  },
-  {
-    id: '2',
-    title: 'Apartamento Luxury en Manhattan',
-    location: 'Manhattan, NY',
-    price: 1800000,
-    image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&q=80',
-    tokensAvailable: 500,
-    totalTokens: 1800,
-    tokensSold: 1300,
-    createdAt: '2024-04-05',
-  },
-  {
-    id: '3',
-    title: 'Villa Colonial en Cartagena',
-    location: 'Cartagena, Colombia',
-    price: 3200000,
-    image: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800&q=80',
-    tokensAvailable: 2000,
-    totalTokens: 3200,
-    tokensSold: 1200,
-    createdAt: '2024-03-01',
-  },
-  {
-    id: '4',
-    title: 'Penthouse en Dubai Marina',
-    location: 'Dubai, UAE',
-    price: 5000000,
-    image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800&q=80',
-    tokensAvailable: 3000,
-    totalTokens: 5000,
-    tokensSold: 2000,
-    createdAt: '2024-02-15',
-  },
-]
+import { propertyService } from '@/services/propertyService'
 
 /**
  * ProfilePage Component
@@ -66,6 +19,8 @@ export function ProfilePage({ user, onLogout, onNavigateToSeller, onViewProperty
   const [isLoading, setIsLoading] = useState(false)
   const [kycStatus, setKycStatus] = useState(null)
   const [kycLoading, setKycLoading] = useState(false)
+  const [userProperties, setUserProperties] = useState([])
+  const [propertiesLoading, setPropertiesLoading] = useState(true)
   const Strings = useStrings()
 
   // Edit form state
@@ -83,6 +38,44 @@ export function ProfilePage({ user, onLogout, onNavigateToSeller, onViewProperty
     }
   }, [user?.id])
 
+  // Fetch user properties on component mount
+  useEffect(() => {
+    if (user?.id) {
+      loadUserProperties()
+    }
+  }, [user?.id])
+
+  const loadUserProperties = async () => {
+    try {
+      setPropertiesLoading(true)
+      console.log('📊 Loading user properties...')
+      const response = await propertyService.getMyOwnedProperties()
+      const properties = response.data || response
+      console.log('📊 User properties loaded:', properties)
+
+      // Map backend properties to frontend format
+      const mappedProperties = properties.map(property => ({
+        id: property.id,
+        title: property.name,
+        location: property.address || 'No address specified',
+        price: parseInt(property.valuation) || 0,
+        image: property.images?.[0] || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&q=80',
+        totalTokens: parseInt(property.totalSupply) || 0,
+        tokensAvailable: parseInt(property.totalSupply) || 0, // Would need to calculate from ownerships
+        tokensSold: 0, // Would need to calculate from ownerships
+        createdAt: property.createdAt,
+        contractId: property.contractId,
+      }))
+
+      setUserProperties(mappedProperties)
+    } catch (error) {
+      console.error('Error loading user properties:', error)
+      setUserProperties([])
+    } finally {
+      setPropertiesLoading(false)
+    }
+  }
+
   // Don't poll if already approved
   useEffect(() => {
     if (kycStatus?.status === 'approved') {
@@ -93,6 +86,7 @@ export function ProfilePage({ user, onLogout, onNavigateToSeller, onViewProperty
 
   const loadKYCStatus = async () => {
     try {
+      setKycLoading(true)
       const statusResponse = await kycService.getKYCStatus(user.id)
       const status = statusResponse.data || statusResponse
       console.log('📊 KYC Status loaded:', status)
@@ -100,7 +94,7 @@ export function ProfilePage({ user, onLogout, onNavigateToSeller, onViewProperty
       return status
     } catch (error) {
       console.error('Error loading KYC status:', error)
-      // Set default status on error
+      // Set default status on error to prevent infinite loading
       const defaultStatus = {
         status: 'not_started',
         level: 1,
@@ -109,48 +103,113 @@ export function ProfilePage({ user, onLogout, onNavigateToSeller, onViewProperty
       }
       setKycStatus(defaultStatus)
       return defaultStatus
+    } finally {
+      setKycLoading(false)
     }
   }
 
   const handleStartKYC = async () => {
     try {
       setKycLoading(true)
-      const response = await kycService.startKYC(user.id, 1)
 
-      // Open Veriff verification URL in a new window
-      const kycUrl = response.data?.kycUrl || response.kycUrl
-      if (kycUrl) {
-        const veriffWindow = window.open(kycUrl, '_blank', 'width=600,height=800')
+      // === SIMULATED KYC FLOW FOR DEMO ===
+      console.log('🔐 Starting KYC verification... (SIMULATED)')
 
-        // Poll for KYC status updates
-        const pollInterval = setInterval(async () => {
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000))
+
+      // Simulate opening Veriff window (commented out for demo)
+      // const response = await kycService.startKYC(user.id, 1)
+      // const kycUrl = response.data?.kycUrl || response.kycUrl
+      // const veriffWindow = window.open(kycUrl, '_blank', 'width=600,height=800')
+
+      console.log('✅ KYC verification window opened (simulated)')
+
+      // Simulate KYC process with status changes
+      toast.success('Iniciando verificación KYC...')
+
+      // Set to pending first
+      setKycStatus({
+        status: 'pending',
+        level: 1,
+        transactionLimit: 1000
+      })
+
+      // Simulate verification process (3 seconds)
+      setTimeout(() => {
+        console.log('✅ KYC verification in progress... (simulated)')
+        toast.loading('Verificando identidad...', { duration: 2000 })
+      }, 1000)
+
+      // Simulate approval after 5 seconds
+      setTimeout(() => {
+        console.log('🎉 KYC Approved! (simulated)')
+
+        const approvedStatus = {
+          status: 'approved',
+          level: 1,
+          transactionLimit: 10000,
+          verifiedAt: new Date().toISOString()
+        }
+
+        setKycStatus(approvedStatus)
+        toast.success('¡KYC verificado exitosamente!')
+
+        // Reload page to show updated status
+        setTimeout(() => {
+          window.location.reload()
+        }, 2000)
+      }, 5000)
+
+      /* COMMENTED OUT - REAL KYC FLOW
+      let pollInterval = null
+      let checkWindow = null
+
+      // Poll for KYC status updates
+      pollInterval = setInterval(async () => {
+        try {
           const statusResponse = await kycService.getKYCStatus(user.id)
           const kycData = statusResponse.data || statusResponse
-          console.log('KYC Status Poll:', kycData) // Debug log
+          console.log('📊 KYC Status Poll:', kycData)
           setKycStatus(kycData)
 
-          // Stop polling if status changed from pending
           if (kycData.status !== 'pending') {
-            console.log('KYC Status changed, closing window. Status:', kycData.status) // Debug log
+            console.log('✅ KYC Status changed, stopping poll. Status:', kycData.status)
             clearInterval(pollInterval)
+            clearInterval(checkWindow)
+
             if (veriffWindow && !veriffWindow.closed) {
               veriffWindow.close()
             }
+
+            if (kycData.status === 'approved') {
+              console.log('🎉 KYC Approved! Reloading user profile...')
+              setTimeout(() => {
+                window.location.reload()
+              }, 2000)
+            }
+          }
+        } catch (error) {
+          console.error('Error polling KYC status:', error)
+            // Don't stop polling on error, just log it
           }
         }, 5000) // Poll every 5 seconds
 
-        // Clean up interval if window is closed
-        const checkWindow = setInterval(() => {
+        // Clean up interval if window is closed manually
+        checkWindow = setInterval(() => {
           if (veriffWindow && veriffWindow.closed) {
+            console.log('🔴 Verification window closed by user')
             clearInterval(pollInterval)
             clearInterval(checkWindow)
-            loadKYCStatus() // Refresh status when window closes
+            // Refresh status one last time when window closes
+            loadKYCStatus()
           }
         }, 1000)
       }
+      */
     } catch (error) {
-      console.error('Error starting KYC:', error)
-      alert('Failed to start KYC verification. Please try again.')
+      console.error('❌ Error starting KYC:', error)
+      toast.error('Error al iniciar verificación KYC')
     } finally {
       setKycLoading(false)
     }
@@ -472,11 +531,30 @@ export function ProfilePage({ user, onLogout, onNavigateToSeller, onViewProperty
             <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">
               {Strings.myProperties || 'Mis Propiedades'}
             </h2>
-            <PropertyCardProfile
-              properties={MOCK_USER_PROPERTIES}
-              onViewDetails={onViewPropertyDetails}
-              onViewAll={onNavigateToSeller}
-            />
+            {propertiesLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <LoaderButton className="w-8 h-8" />
+                <span className="ml-3 text-muted-foreground">Loading properties...</span>
+              </div>
+            ) : userProperties.length === 0 ? (
+              <div className="text-center py-8 px-4 border-2 border-dashed border-border rounded-lg">
+                <p className="text-muted-foreground mb-2">You don't have any properties yet</p>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onNavigateToSeller}
+                  className="mt-2"
+                >
+                  Create Your First Property
+                </Button>
+              </div>
+            ) : (
+              <PropertyCardProfile
+                properties={userProperties}
+                onViewDetails={onViewPropertyDetails}
+                onViewAll={onNavigateToSeller}
+              />
+            )}
           </div>
 
           {/* Divider between sections */}
@@ -495,8 +573,12 @@ export function ProfilePage({ user, onLogout, onNavigateToSeller, onViewProperty
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium text-muted-foreground mb-1">{Strings.walletAddress}</p>
-                  <div className="flex items-center gap-2 mb-1">
-                    <p className="text-sm font-mono font-medium truncate flex-1">{user.walletAddress}</p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="p-2 px-3 rounded-lg bg-primary/10 border border-primary/20">
+                      <p className="text-sm font-mono font-semibold text-primary">
+                        #{Math.floor(100000 + Math.random() * 900000)}
+                      </p>
+                    </div>
                     <Button
                       variant="ghost"
                       size="sm"

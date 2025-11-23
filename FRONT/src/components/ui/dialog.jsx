@@ -33,10 +33,9 @@ const DialogContent = React.forwardRef(({ className, children, ...props }, ref) 
   <div
     ref={ref}
     className={cn(
-      'relative max-h-[90vh] w-full max-w-lg overflow-hidden rounded-lg border bg-[var(--color-surface)] border-[var(--color-border)] p-6',
+      'relative max-h-[90vh] w-full max-w-lg overflow-hidden rounded-lg border bg-background border-border p-6 shadow-2xl',
       className
     )}
-    style={{ boxShadow: 'var(--shadow-modal)' }}
     {...props}
   >
     {children}

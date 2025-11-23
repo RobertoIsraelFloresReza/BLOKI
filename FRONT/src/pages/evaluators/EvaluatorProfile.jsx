@@ -3,6 +3,7 @@ import { ArrowLeft, Award, Star, Building2, MapPin, Mail, Phone, Globe, CheckCir
 import { Card, CardHeader, CardTitle, CardContent, Button, Badge, Spinner } from '@/components/ui'
 import { PropertyCard } from '@/components/properties/PropertyCard'
 import { useEvaluator } from '@/hooks'
+import { useStrings } from '@/utils/localizations/useStrings'
 
 /**
  * EvaluatorProfile
@@ -15,13 +16,17 @@ export function EvaluatorProfile() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { evaluator, isLoading, error } = useEvaluator(id)
+  const Strings = useStrings()
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center pb-20">
-        <div className="text-center">
-          <Spinner size="lg" />
-          <p className="mt-4 text-muted-foreground">Cargando perfil del evaluador...</p>
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <Spinner size="xl" variant="orbit" />
+            <div className="absolute inset-0 -z-10 bg-primary/20 blur-2xl rounded-full animate-pulse" />
+          </div>
+          <p className="text-muted-foreground animate-pulse">{Strings.loadingEvaluatorProfile}</p>
         </div>
       </div>
     )
@@ -35,14 +40,14 @@ export function EvaluatorProfile() {
             <Award className="w-8 h-8 text-destructive" />
           </div>
           <h3 className="text-xl font-semibold text-foreground mb-2">
-            Evaluador no encontrado
+            {Strings.evaluatorNotFound}
           </h3>
           <p className="text-muted-foreground mb-4">
-            {error?.message || 'No se pudo cargar la información del evaluador'}
+            {error?.message || Strings.couldNotLoadEvaluatorInfo}
           </p>
           <Button onClick={() => navigate('/evaluators')}>
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver a Evaluadores
+            {Strings.backToEvaluators}
           </Button>
         </div>
       </div>
@@ -63,7 +68,7 @@ export function EvaluatorProfile() {
             className="mb-6"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver a Evaluadores
+            {Strings.backToEvaluators}
           </Button>
 
           {/* Evaluator Header */}
@@ -87,7 +92,7 @@ export function EvaluatorProfile() {
                 <h1 className="text-3xl font-bold text-foreground">{evaluator.name}</h1>
                 <CheckCircle className="w-6 h-6 text-primary flex-shrink-0" />
                 <Badge variant="secondary" className="bg-green-500/10 text-green-500 border-green-500/20">
-                  Certificado por Blocki
+                  {Strings.certifiedByBlocki}
                 </Badge>
               </div>
 
@@ -149,22 +154,22 @@ export function EvaluatorProfile() {
             {/* Statistics */}
             <Card>
               <CardHeader>
-                <CardTitle>Estadísticas</CardTitle>
+                <CardTitle>{Strings.statistics}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Rating</span>
+                  <span className="text-sm text-muted-foreground">{Strings.rating}</span>
                   <div className="flex items-center gap-1">
                     <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
                     <span className="font-semibold">{evaluator.rating || 5.0}</span>
                   </div>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Propiedades Evaluadas</span>
+                  <span className="text-sm text-muted-foreground">{Strings.propertiesEvaluated}</span>
                   <span className="font-semibold">{evaluator.propertiesEvaluated || 0}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Miembro desde</span>
+                  <span className="text-sm text-muted-foreground">{Strings.memberSince}</span>
                   <div className="flex items-center gap-1">
                     <Calendar className="w-3 h-3 text-muted-foreground" />
                     <span className="text-sm font-semibold">
@@ -179,7 +184,7 @@ export function EvaluatorProfile() {
             {certifications.length > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle>Certificaciones</CardTitle>
+                  <CardTitle>{Strings.certifications}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
@@ -204,10 +209,10 @@ export function EvaluatorProfile() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Building2 className="w-5 h-5" />
-                  Historial de Propiedades Evaluadas
+                  {Strings.propertyHistory}
                 </CardTitle>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Todas las propiedades certificadas por este evaluador
+                  {Strings.allPropertiesCertified}
                 </p>
               </CardHeader>
               <CardContent>
@@ -227,7 +232,7 @@ export function EvaluatorProfile() {
                       <Building2 className="w-8 h-8 text-muted-foreground" />
                     </div>
                     <p className="text-muted-foreground">
-                      Este evaluador aún no ha certificado propiedades en la plataforma
+                      {Strings.evaluatorNoCertifiedProperties}
                     </p>
                   </div>
                 )}

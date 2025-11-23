@@ -10,3 +10,10 @@ export { marketplaceService } from './marketplaceService'
 export { walletService } from './walletService'
 export { ownershipService } from './ownershipService'
 export { kycService } from './kycService'
+export { userService } from './userService'
+
+// DeFi Services - NEW
+export { soroswapService } from './soroswapService'
+export { oracleService } from './oracleService'
+export { defindexService } from './defindexService'
+export { zkService } from './zkService'

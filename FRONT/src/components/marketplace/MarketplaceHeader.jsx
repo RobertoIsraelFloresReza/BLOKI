@@ -19,7 +19,7 @@ export function MarketplaceHeader({
     <div className="relative py-8 md:py-10 lg:py-12">
       <div className="max-w-7xl mx-auto px-6 sm:px-6 lg:px-8 relative z-10">
         {/* Title */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-6 pt-8 md:pt-10">
           {/* Main Title with Gradient */}
           <h1 className="font-open-sans font-extrabold mb-3 leading-none">
             <div className="text-4xl md:text-5xl lg:text-6xl mb-2">

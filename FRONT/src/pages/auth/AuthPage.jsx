@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Mail, Lock, User, Eye, EyeOff, Sparkles } from 'lucide-react'
+import { Mail, Lock, User, Eye, EyeOff, Sparkles, ArrowLeft } from 'lucide-react'
 import { Button, Input, LoaderButton, Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui'
 import { Logo } from '@/components/ui'
 import { useStrings } from '@/utils/localizations/useStrings'
 import { useAuth } from '@/hooks'
+import { SecretKeyBackupModal } from '@/components/wallet'
+import { authService } from '@/services'
 
 // Google Icon SVG Component
 const GoogleIcon = () => (
@@ -33,6 +35,11 @@ const GoogleIcon = () => (
  * Modern authentication without cards
  * Login: Simple form with Google
  * Register: Tabs for Personal Info / Security
+ *
+ * FLUJOS DE REDIRECCION:
+ * 1. Login tradicional → Marketplace
+ * 2. Registro tradicional → SecretKeyBackupModal → Marketplace
+ * 3. OAuth (Google) → Marketplace directo
  */
 export function AuthPage() {
   const navigate = useNavigate()
@@ -48,12 +55,50 @@ export function AuthPage() {
   const [registerData, setRegisterData] = useState({ name: '', email: '', password: '', confirmPassword: '' })
   const [errors, setErrors] = useState({})
 
-  // If user is authenticated, redirect to marketplace
+  // Secret Key Backup Modal (only show after TRADITIONAL registration)
+  const [showSecretKeyModal, setShowSecretKeyModal] = useState(false)
+  const [userSecretKey, setUserSecretKey] = useState(null)
+  const [isNewTraditionalRegistration, setIsNewTraditionalRegistration] = useState(false)
+
+  // Handle redirections when user is authenticated
   useEffect(() => {
-    if (user) {
-      navigate('/', { replace: true })
+    if (!user) return
+
+    // CASO 1: Registro tradicional exitoso → Mostrar SecretKeyBackupModal
+    if (isNewTraditionalRegistration && !showSecretKeyModal && !userSecretKey) {
+      console.log('🔐 Traditional registration successful, fetching secret key...')
+      fetchSecretKey()
+      return
     }
-  }, [user, navigate])
+
+    // CASO 2: Login o OAuth → Ir directo a marketplace
+    if (user && !isNewTraditionalRegistration && !showSecretKeyModal) {
+      console.log(`✅ Login/OAuth successful, redirecting to /marketplace`)
+      navigate('/marketplace', { replace: true })
+    }
+  }, [user, isNewTraditionalRegistration, showSecretKeyModal, userSecretKey])
+
+  // Fetch user's secret key after registration
+  const fetchSecretKey = async () => {
+    try {
+      const response = await authService.getWalletSecretKey()
+      console.log('✅ Secret key fetched successfully')
+      setUserSecretKey(response.stellarSecretKey)
+      setShowSecretKeyModal(true)
+    } catch (error) {
+      console.error('❌ Failed to fetch secret key:', error)
+      // If fetch fails, still redirect to marketplace
+      navigate('/marketplace', { replace: true })
+    }
+  }
+
+  // Handle secret key modal close (user confirmed they saved it)
+  const handleSecretKeyModalClose = () => {
+    setShowSecretKeyModal(false)
+    setIsNewTraditionalRegistration(false)
+    console.log('✅ User confirmed secret key backup, redirecting to /marketplace')
+    navigate('/marketplace', { replace: true })
+  }
 
   // Validation
   const validateEmail = (email) => {
@@ -81,6 +126,9 @@ export function AuthPage() {
     }
 
     setErrors({})
+
+    // Make sure we're NOT in registration mode
+    setIsNewTraditionalRegistration(false)
 
     // Call real login from backend
     login({
@@ -114,12 +162,21 @@ export function AuthPage() {
 
     setErrors({})
 
+    // Mark as traditional registration to trigger secret key modal
+    setIsNewTraditionalRegistration(true)
+
     // Call real register from backend (auto-generates Stellar wallet)
     register({
       name: registerData.name,
       email: registerData.email,
       password: registerData.password,
     })
+  }
+
+  const handleGoogleSignIn = () => {
+    // OAuth does NOT need secret key modal, goes directly to marketplace
+    setIsNewTraditionalRegistration(false)
+    googleSignIn()
   }
 
   return (
@@ -132,18 +189,29 @@ export function AuthPage() {
 
       {/* Main Auth Container */}
       <div className="w-full max-w-md relative z-10">
+        {/* Back Button */}
+        <div className="mb-6">
+          <button
+            onClick={() => navigate('/')}
+            className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors group"
+          >
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+            <span className="text-sm font-medium">{Strings.back}</span>
+          </button>
+        </div>
+
         {/* Logo and Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
             <Logo size="sm" withEffects={false} />
           </div>
           <h1 className="text-3xl font-bold mb-2">
-            {activeTab === 'login' ? 'Welcome back' : 'Create your account'}
+            {activeTab === 'login' ? Strings.welcomeBack : Strings.createYourAccount}
           </h1>
           <p className="text-muted-foreground">
             {activeTab === 'login'
-              ? 'Sign in to manage your tokenized properties'
-              : 'Get your Stellar wallet instantly'}
+              ? Strings.signInToManageProperties
+              : Strings.getStellarWalletInstantly}
           </p>
         </div>
 
@@ -153,14 +221,14 @@ export function AuthPage() {
           <div className="space-y-6">
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Email</label>
+                <label className="text-sm font-medium mb-2 block">{Strings.emailAddress}</label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     type="email"
                     value={loginData.email}
                     onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
-                    placeholder="your@email.com"
+                    placeholder={Strings.emailPlaceholder}
                     className={`pl-10 ${errors.email ? 'border-destructive' : ''}`}
                   />
                 </div>
@@ -168,14 +236,14 @@ export function AuthPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium mb-2 block">Password</label>
+                <label className="text-sm font-medium mb-2 block">{Strings.enterNewPassword}</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     type={showPassword ? 'text' : 'password'}
                     value={loginData.password}
                     onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                    placeholder="••••••••"
+                    placeholder={Strings.passwordPlaceholder}
                     className={`pl-10 pr-10 ${errors.password ? 'border-destructive' : ''}`}
                   />
                   <button
@@ -197,10 +265,10 @@ export function AuthPage() {
                     onChange={(e) => setLoginData({ ...loginData, remember: e.target.checked })}
                     className="w-4 h-4 rounded border-border"
                   />
-                  <span className="text-muted-foreground">Remember me</span>
+                  <span className="text-muted-foreground">{Strings.rememberMe}</span>
                 </label>
                 <button type="button" className="text-primary hover:underline">
-                  Forgot password?
+                  {Strings.forgotPassword}
                 </button>
               </div>
 
@@ -208,10 +276,10 @@ export function AuthPage() {
                 {isLoggingIn ? (
                   <>
                     <LoaderButton className="mr-2" />
-                    Signing in...
+                    {Strings.signingIn}
                   </>
                 ) : (
-                  'Sign In'
+                  Strings.signIn
                 )}
               </Button>
             </form>
@@ -233,7 +301,7 @@ export function AuthPage() {
               type="button"
               variant="outline"
               className="w-full h-12 border-2 hover:border-primary/50 transition-all"
-              onClick={() => googleSignIn()}
+              onClick={handleGoogleSignIn}
             >
               <GoogleIcon />
               <span className="ml-2 font-medium">{Strings.signInWithGoogle}</span>
@@ -242,7 +310,7 @@ export function AuthPage() {
             {/* Footer Link to Register */}
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
-                Don't have an account?{' '}
+                {Strings.dontHaveAccount}{' '}
                 <button
                   type="button"
                   onClick={() => {
@@ -251,7 +319,7 @@ export function AuthPage() {
                   }}
                   className="text-primary font-medium hover:underline"
                 >
-                  Create one
+                  {Strings.createOne}
                 </button>
               </p>
             </div>
@@ -261,21 +329,21 @@ export function AuthPage() {
           <div className="space-y-6">
             <Tabs defaultValue="personal" className="w-full">
               <TabsList className="w-full border-b border-border">
-                <TabsTrigger value="personal">Personal Info</TabsTrigger>
-                <TabsTrigger value="security">Security</TabsTrigger>
+                <TabsTrigger value="personal">{Strings.personalInfo}</TabsTrigger>
+                <TabsTrigger value="security">{Strings.security}</TabsTrigger>
               </TabsList>
 
               {/* Tab 1: Personal Info */}
               <TabsContent value="personal" className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Full Name</label>
+                  <label className="text-sm font-medium mb-2 block">{Strings.fullName}</label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       type="text"
                       value={registerData.name}
                       onChange={(e) => setRegisterData({ ...registerData, name: e.target.value })}
-                      placeholder="John Doe"
+                      placeholder={Strings.fullNamePlaceholder}
                       className={`pl-10 ${errors.name ? 'border-destructive' : ''}`}
                     />
                   </div>
@@ -283,14 +351,14 @@ export function AuthPage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Email</label>
+                  <label className="text-sm font-medium mb-2 block">{Strings.emailAddress}</label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input
                       type="email"
                       value={registerData.email}
                       onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
-                      placeholder="your@email.com"
+                      placeholder={Strings.emailPlaceholder}
                       className={`pl-10 ${errors.email ? 'border-destructive' : ''}`}
                     />
                   </div>
@@ -314,7 +382,7 @@ export function AuthPage() {
                   type="button"
                   variant="outline"
                   className="w-full h-12 border-2 hover:border-primary/50 transition-all"
-                  onClick={() => googleSignIn()}
+                  onClick={handleGoogleSignIn}
                 >
                   <GoogleIcon />
                   <span className="ml-2 font-medium">{Strings.signInWithGoogle}</span>
@@ -325,14 +393,14 @@ export function AuthPage() {
               <TabsContent value="security">
                 <form onSubmit={handleRegisterSubmit} className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Password</label>
+                    <label className="text-sm font-medium mb-2 block">{Strings.enterNewPassword}</label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
                         type={showPassword ? 'text' : 'password'}
                         value={registerData.password}
                         onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
-                        placeholder="••••••••"
+                        placeholder={Strings.passwordPlaceholder}
                         className={`pl-10 pr-10 ${errors.password ? 'border-destructive' : ''}`}
                       />
                       <button
@@ -349,7 +417,7 @@ export function AuthPage() {
                         <div className="flex items-center gap-2 text-xs">
                           <div className={`w-2 h-2 rounded-full ${registerData.password.length >= 8 ? 'bg-green-500' : 'bg-muted'}`} />
                           <span className={registerData.password.length >= 8 ? 'text-green-500' : 'text-muted-foreground'}>
-                            At least 8 characters
+                            {Strings.atLeast8Characters}
                           </span>
                         </div>
                       </div>
@@ -357,14 +425,14 @@ export function AuthPage() {
                   </div>
 
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Confirm Password</label>
+                    <label className="text-sm font-medium mb-2 block">{Strings.confirmNewPassword}</label>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                       <Input
                         type={showPassword ? 'text' : 'password'}
                         value={registerData.confirmPassword}
                         onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
-                        placeholder="••••••••"
+                        placeholder={Strings.passwordPlaceholder}
                         className={`pl-10 pr-10 ${errors.confirmPassword ? 'border-destructive' : ''}`}
                       />
                     </div>
@@ -376,9 +444,9 @@ export function AuthPage() {
                     <div className="flex items-start gap-3">
                       <Sparkles className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                       <div className="text-sm">
-                        <p className="font-medium text-foreground mb-1">Stellar Wallet Included</p>
+                        <p className="font-medium text-foreground mb-1">{Strings.stellarWalletIncluded}</p>
                         <p className="text-muted-foreground text-xs">
-                          Your personal Stellar wallet will be created automatically upon registration
+                          {Strings.stellarWalletAutoCreate}
                         </p>
                       </div>
                     </div>
@@ -388,21 +456,21 @@ export function AuthPage() {
                     {isRegistering ? (
                       <>
                         <LoaderButton className="mr-2" />
-                        Creating account...
+                        {Strings.creatingAccount}
                       </>
                     ) : (
-                      'Create Account'
+                      Strings.createAccount
                     )}
                   </Button>
 
                   <p className="text-xs text-center text-muted-foreground">
-                    By creating an account, you agree to our{' '}
+                    {Strings.byCreatingAccount}{' '}
                     <button type="button" className="text-primary hover:underline">
-                      Terms of Service
+                      {Strings.termsOfService}
                     </button>
-                    {' '}and{' '}
+                    {' '}{Strings.and}{' '}
                     <button type="button" className="text-primary hover:underline">
-                      Privacy Policy
+                      {Strings.privacyPolicy}
                     </button>
                   </p>
                 </form>
@@ -412,7 +480,7 @@ export function AuthPage() {
             {/* Footer Link to Login */}
             <div className="mt-6 text-center">
               <p className="text-sm text-muted-foreground">
-                Already have an account?{' '}
+                {Strings.alreadyHaveAccount}{' '}
                 <button
                   type="button"
                   onClick={() => {
@@ -421,13 +489,23 @@ export function AuthPage() {
                   }}
                   className="text-primary font-medium hover:underline"
                 >
-                  Sign in
+                  {Strings.signIn}
                 </button>
               </p>
             </div>
           </div>
         )}
       </div>
+
+      {/* Secret Key Backup Modal - Show ONLY after TRADITIONAL registration */}
+      {showSecretKeyModal && userSecretKey && user && (
+        <SecretKeyBackupModal
+          isOpen={showSecretKeyModal}
+          onClose={handleSecretKeyModalClose}
+          secretKey={userSecretKey}
+          publicKey={user.walletAddress || user.stellarPublicKey}
+        />
+      )}
     </div>
   )
 }

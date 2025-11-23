@@ -136,4 +136,16 @@ export const authService = {
 
     return { token, user }
   },
+
+  /**
+   * Get user's Stellar wallet secret key
+   * Required for signing transactions (e.g., token purchases)
+   * @returns {Promise<{secretKey: string}>}
+   */
+  async getWalletSecretKey() {
+    console.log('🔐 Fetching wallet secret key from backend...')
+    const response = await api.get('/auth/wallet/secret-key')
+    console.log('✅ Secret key retrieved successfully')
+    return response.data
+  },
 }

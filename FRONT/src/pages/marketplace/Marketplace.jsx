@@ -230,12 +230,15 @@ const DEMO_PROPERTIES = [
   }
 ]
 
-export function Marketplace({ user, onFiltersChange, isScrolled, showMobileSearch, onCloseMobileSearch }) {
+export function Marketplace({ user, onFiltersChange, isScrolled, showMobileSearch, onCloseMobileSearch, searchQuery = '', onSearchChange }) {
   const navigate = useNavigate()
-  const [searchQuery, setSearchQuery] = useState('')
   const [selectedFilter, setSelectedFilter] = useState('all')
   const [selectedProperty, setSelectedProperty] = useState(null)
   const Strings = useStrings()
+
+  // Use external search query and handler (controlled by App.jsx)
+  const activeSearchQuery = searchQuery
+  const handleSearchChange = onSearchChange
 
   // Handler to navigate to property details
   const handleViewDetails = (property) => {
@@ -243,23 +246,24 @@ export function Marketplace({ user, onFiltersChange, isScrolled, showMobileSearc
     navigate(`/property/${property.id}`)
   }
 
-  // ALWAYS use real backend data
-  const { properties, isLoading, error } = useProperties({
-    // No filters - get ALL properties from backend
-    page: 1,
-    limit: 100,
-  })
+  // Fetch ALL properties
+  const { properties, isLoading, error } = useProperties()
 
-  // Use real properties from backend (fallback to empty array if loading/error)
-  const allProperties = properties || []
+  // Transform to consistent structure
+  const allProperties = (properties || []).map(property => ({
+    ...property,
+    tokensAvailable: property.availableTokens || property.tokensAvailable || parseInt(property.totalSupply) / 10000000,
+    totalTokens: parseInt(property.totalSupply) / 10000000,
+    price: parseInt(property.valuation) / 10000000,
+  }))
 
-  // DEBUG: Log properties to console
+  // DEBUG: Log listings to console
   useEffect(() => {
     console.log('🔍 DEBUG Marketplace - Properties:', properties)
+    console.log('🔍 DEBUG Marketplace - Transformed Properties:', allProperties)
     console.log('🔍 DEBUG Marketplace - isLoading:', isLoading)
     console.log('🔍 DEBUG Marketplace - error:', error)
-    console.log('🔍 DEBUG Marketplace - allProperties:', allProperties)
-  }, [properties, isLoading, error, allProperties])
+  }, [properties, allProperties, isLoading, error])
 
   // Pass filters to parent (App) so Navbar can display them
   useEffect(() => {
@@ -295,9 +299,9 @@ export function Marketplace({ user, onFiltersChange, isScrolled, showMobileSearc
 
     // Filter by search query
     const matchesSearch =
-      searchQuery === '' ||
-      propertyName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      propertyLocation?.toLowerCase().includes(searchQuery.toLowerCase())
+      activeSearchQuery === '' ||
+      propertyName?.toLowerCase().includes(activeSearchQuery.toLowerCase()) ||
+      propertyLocation?.toLowerCase().includes(activeSearchQuery.toLowerCase())
 
     return matchesCategory && matchesSearch
   })
@@ -318,7 +322,7 @@ export function Marketplace({ user, onFiltersChange, isScrolled, showMobileSearc
           <div className="h-full flex flex-col">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-4 border-b border-border">
-              <h2 className="text-xl font-bold">Buscar y Filtrar</h2>
+              <h2 className="text-xl font-bold">{Strings.searchAndFilter}</h2>
               <button
                 onClick={onCloseMobileSearch}
                 className="p-2 hover:bg-accent rounded-lg transition-colors"
@@ -331,17 +335,17 @@ export function Marketplace({ user, onFiltersChange, isScrolled, showMobileSearc
             <div className="flex-1 overflow-y-auto p-4 space-y-6">
               {/* Search Bar */}
               <div>
-                <label className="text-sm font-medium mb-2 block">Buscar</label>
+                <label className="text-sm font-medium mb-2 block">{Strings.search}</label>
                 <SearchBar
                   placeholder={Strings.searchPlaceholder}
-                  value={searchQuery}
-                  onChange={setSearchQuery}
+                  value={activeSearchQuery}
+                  onChange={handleSearchChange}
                 />
               </div>
 
               {/* Categories */}
               <div>
-                <label className="text-sm font-medium mb-3 block">Categorías</label>
+                <label className="text-sm font-medium mb-3 block">{Strings.categories}</label>
                 <FiltersTabs
                   filters={getPropertyFilters(Strings)}
                   selectedFilter={selectedFilter}
@@ -356,7 +360,7 @@ export function Marketplace({ user, onFiltersChange, isScrolled, showMobileSearc
                 onClick={onCloseMobileSearch}
                 className="w-full py-3 bg-primary text-primary-foreground rounded-xl font-semibold hover:bg-primary/90 transition-colors"
               >
-                Aplicar ({filteredProperties.length} propiedades)
+                {Strings.apply} ({filteredProperties.length} {Strings.properties})
               </button>
             </div>
           </div>
@@ -365,8 +369,8 @@ export function Marketplace({ user, onFiltersChange, isScrolled, showMobileSearc
 
       {/* Header Section */}
       <MarketplaceHeader
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
+        searchQuery={activeSearchQuery}
+        setSearchQuery={handleSearchChange}
         filters={getPropertyFilters(Strings)}
         selectedFilter={selectedFilter}
         setSelectedFilter={setSelectedFilter}
@@ -390,9 +394,12 @@ export function Marketplace({ user, onFiltersChange, isScrolled, showMobileSearc
       <div className="max-w-7xl mx-auto px-6 sm:px-6 lg:px-8 py-12">
         {/* Loading State */}
         {isLoading && (
-          <div className="flex justify-center items-center py-20">
-            <Spinner size="lg" />
-            <span className="ml-3 text-muted-foreground">Cargando propiedades...</span>
+          <div className="flex flex-col justify-center items-center py-20 gap-4">
+            <div className="relative">
+              <Spinner size="xl" variant="orbit" />
+              <div className="absolute inset-0 -z-10 bg-primary/20 blur-2xl rounded-full animate-pulse" />
+            </div>
+            <p className="text-muted-foreground animate-pulse">{Strings.loadingProperties}</p>
           </div>
         )}
 
@@ -403,16 +410,16 @@ export function Marketplace({ user, onFiltersChange, isScrolled, showMobileSearc
               <Home className="w-8 h-8 text-destructive" />
             </div>
             <h3 className="text-xl font-semibold text-foreground mb-2">
-              Error al cargar propiedades
+              {Strings.errorLoadingProperties}
             </h3>
             <p className="text-muted-foreground max-w-sm mx-auto mb-4">
-              No se pudieron cargar las propiedades. Por favor intenta nuevamente.
+              {Strings.couldNotLoadProperties}
             </p>
             <button
               onClick={() => window.location.reload()}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
             >
-              Recargar
+              {Strings.reload}
             </button>
           </div>
         )}
@@ -447,7 +454,7 @@ export function Marketplace({ user, onFiltersChange, isScrolled, showMobileSearc
               {Strings.noPropertiesFound}
             </h3>
             <p className="text-muted-foreground max-w-sm mx-auto">
-              {searchQuery
+              {activeSearchQuery
                 ? Strings.tryOtherSearch
                 : Strings.noPropertiesMessage
               }

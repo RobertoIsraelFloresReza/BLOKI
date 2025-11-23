@@ -1,4 +1,5 @@
 export { WalletConnect } from './WalletConnect'
 export { AllTransactions } from './AllTransactions'
+export { SecretKeyBackupModal } from './SecretKeyBackupModal'
 export { TransactionTable } from './TransactionTable'
 export { TransactionCards } from './TransactionCards'

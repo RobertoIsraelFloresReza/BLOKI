@@ -114,159 +114,81 @@ export function Footer() {
 
   return (
     <>
-      <footer className="relative w-full mt-auto border-t border-border/50 bg-gradient-to-b from-background via-primary/[0.02] to-background overflow-hidden">
-        {/* Animated background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-secondary/5 to-primary/5 opacity-50" />
+      <footer className="relative w-full mt-auto overflow-hidden border-t border-border/50">
+        {/* Background matching navbar style */}
+        <div className="absolute inset-0 bg-card/50 backdrop-blur-sm" />
+        <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Stats Bar */}
-          <div className="py-8 border-b border-border/30">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {stats.map((stat, index) => {
-                const Icon = stat.icon
-                return (
-                  <div
-                    key={index}
-                    className="flex items-center gap-4 p-4 rounded-xl bg-card/50 backdrop-blur-sm border border-border/50 hover:border-primary/30 transition-all group"
-                  >
-                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <Icon className="w-6 h-6 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-                      <p className="text-sm text-muted-foreground">{stat.label}</p>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
-          {/* Main Footer Content */}
+          {/* Main Content - Centered and Minimal */}
           <div className="py-12">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-              {/* Left: Branding */}
-              <div className="lg:col-span-5">
-                <div className="mb-6">
-                  <LogoWithText size="sm" />
-                </div>
-                <p className="text-base text-muted-foreground leading-relaxed max-w-md mb-6">
-                  {Strings.footerDescription}
-                </p>
+            <div className="flex flex-col items-center text-center space-y-8">
 
-                {/* Social Links */}
-                <div className="flex items-center gap-3">
-                  {socialLinks.map((social, index) => {
-                    const Icon = social.icon
-                    return (
-                      <a
-                        key={index}
-                        href={social.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`w-11 h-11 rounded-xl bg-accent/50 backdrop-blur-sm border border-border/50 flex items-center justify-center transition-all ${social.color} hover:scale-110 hover:shadow-lg`}
-                        aria-label={social.label}
-                      >
-                        <Icon className="w-5 h-5" />
-                      </a>
-                    )
-                  })}
-                </div>
+              {/* Logo */}
+              <div className="mb-2">
+                <LogoWithText size="sm" />
               </div>
 
-              {/* Right: Quick Links */}
-              <div className="lg:col-span-7">
-                <div className="grid grid-cols-2 gap-8">
-                  {/* Legal */}
-                  <div>
-                    <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-                      <Shield className="w-4 h-4 text-primary" />
-                      {Strings.legal}
-                    </h3>
-                    <ul className="space-y-3">
-                      <li>
-                        <button
-                          onClick={() => setShowModal('privacy')}
-                          className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
-                        >
-                          <span>{Strings.privacyPolicy}</span>
-                          <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </button>
-                      </li>
-                      <li>
-                        <button
-                          onClick={() => setShowModal('terms')}
-                          className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
-                        >
-                          <span>{Strings.termsOfService}</span>
-                          <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </button>
-                      </li>
-                      <li>
-                        <button
-                          onClick={() => setShowModal('cookies')}
-                          className="text-sm text-muted-foreground hover:text-primary transition-colors flex items-center gap-2 group"
-                        >
-                          <span>{Strings.cookiesPolicy}</span>
-                          <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </button>
-                      </li>
-                    </ul>
-                  </div>
-
-                  {/* Technology */}
-                  <div>
-                    <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-secondary" />
-                      {Strings.technology}
-                    </h3>
-                    <ul className="space-y-3">
-                      <li>
-                        <a
-                          href="https://stellar.org"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-muted-foreground hover:text-secondary transition-colors flex items-center gap-2 group"
-                        >
-                          <span>{Strings.stellarBlockchain}</span>
-                          <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </a>
-                      </li>
-                      <li>
-                        <a
-                          href="https://soroban.stellar.org"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-muted-foreground hover:text-secondary transition-colors flex items-center gap-2 group"
-                        >
-                          <span>{Strings.sorobanSmartContracts}</span>
-                          <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </a>
-                      </li>
-                      <li>
-                        <a
-                          href="https://freighter.app"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-sm text-muted-foreground hover:text-secondary transition-colors flex items-center gap-2 group"
-                        >
-                          <span>{Strings.freighterWallet}</span>
-                          <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </a>
-                      </li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom Bar */}
-          <div className="py-6 border-t border-border/30">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <p className="text-sm text-muted-foreground">
-                © {currentYear} Blocki. {Strings.allRightsReserved}
+              {/* Description */}
+              <p className="text-sm text-muted-foreground max-w-lg leading-relaxed">
+                {Strings.footerDescription}
               </p>
+
+              {/* Stellar Technology Links - Professional */}
+              <div className="flex flex-wrap items-center justify-center gap-6">
+                <a
+                  href="https://stellar.org"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>{Strings.stellarBlockchain}</span>
+                  <ExternalLink className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
+                </a>
+
+                <a
+                  href="https://soroban.stellar.org"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Shield className="w-4 h-4" />
+                  <span>{Strings.sorobanSmartContracts}</span>
+                  <ExternalLink className="w-3 h-3 opacity-50 group-hover:opacity-100 transition-opacity" />
+                </a>
+              </div>
+
+              {/* Legal Links - Minimal */}
+              <div className="flex flex-wrap items-center justify-center gap-4 text-xs">
+                <button
+                  onClick={() => setShowModal('privacy')}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {Strings.privacyPolicy}
+                </button>
+                <span className="text-muted-foreground/30">•</span>
+                <button
+                  onClick={() => setShowModal('terms')}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {Strings.termsOfService}
+                </button>
+                <span className="text-muted-foreground/30">•</span>
+                <button
+                  onClick={() => setShowModal('cookies')}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {Strings.cookiesPolicy}
+                </button>
+              </div>
+
+              {/* Copyright - Bottom */}
+              <div className="pt-8 border-t border-border/30 w-full">
+                <p className="text-xs text-muted-foreground">
+                  © {currentYear} Blocki. {Strings.allRightsReserved}
+                </p>
+              </div>
             </div>
           </div>
         </div>

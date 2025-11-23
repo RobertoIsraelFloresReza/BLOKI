@@ -16,7 +16,7 @@ export function Logo({ size = 'default', withEffects = false, className }) {
     lg: 'w-48 h-48',
   }
 
-  const logoSrc = theme === 'dark' ? '/claro.png' : '/oscuro.png'
+  const logoSrc = theme === 'dark' ? '/oscuro.png' : '/claro.png'
 
   return (
     <div

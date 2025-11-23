@@ -59,3 +59,4 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 /auth_info_baileys
 
 /contracts/debt_registry/target/
+/service-blocki/stellar-blocki/circuits/build

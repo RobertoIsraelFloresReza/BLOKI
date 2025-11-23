@@ -43,14 +43,24 @@ export const marketplaceService = {
   /**
    * Buy tokens from marketplace
    * @param {Object} data
-   * @param {string} data.propertyId - Property ID
-   * @param {number} data.tokensAmount - Number of tokens to buy
-   * @param {string} data.buyerAddress - Buyer's Stellar address
-   * @param {string} data.signedTransaction - Signed Stellar transaction XDR
+   * @param {number} data.listingId - Listing ID
+   * @param {number} data.amount - Number of tokens to buy
+   * @param {string} data.buyerSecretKey - Buyer's Stellar secret key
    * @returns {Promise<Object>} Purchase confirmation with transaction hash
    */
   async buyTokens(data) {
-    const response = await api.post('/marketplace/listings/buy', data)
+    console.log('💰 === MARKETPLACE SERVICE: BUY TOKENS ===')
+    console.log('Listing ID:', data.listingId)
+    console.log('Amount:', data.amount)
+    console.log('Buyer has secret key:', !!data.buyerSecretKey)
+
+    const response = await api.post('/marketplace/listings/buy', {
+      listingId: data.listingId,
+      amount: data.amount,
+      buyerSecretKey: data.buyerSecretKey
+    })
+
+    console.log('✅ Purchase successful:', response.data)
     return response.data
   },
 

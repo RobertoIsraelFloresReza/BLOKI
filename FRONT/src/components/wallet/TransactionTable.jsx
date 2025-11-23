@@ -28,7 +28,7 @@ export function TransactionTable({ transactions = [] }) {
   if (transactions.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">{Strings.noTransactions || 'No hay transacciones'}</p>
+        <p className="text-muted-foreground">{Strings.noTransactions}</p>
       </div>
     )
   }
@@ -40,25 +40,25 @@ export function TransactionTable({ transactions = [] }) {
         <thead>
           <tr className="border-b border-border">
             <th className="text-left py-4 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Tipo
+              {Strings.type}
             </th>
             <th className="text-left py-4 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Activo
+              {Strings.asset}
             </th>
             <th className="text-right py-4 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Cantidad
+              {Strings.amount}
             </th>
             <th className="text-right py-4 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Valor USDC
+              {Strings.valueUSDC}
             </th>
             <th className="text-left py-4 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Estado
+              {Strings.status}
             </th>
             <th className="text-left py-4 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Fecha
+              {Strings.date}
             </th>
             <th className="text-left py-4 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              De/Para
+              {Strings.fromTo}
             </th>
           </tr>
         </thead>
@@ -85,7 +85,7 @@ export function TransactionTable({ transactions = [] }) {
                     )}
                   </div>
                   <span className="text-sm font-medium capitalize">
-                    {tx.type === 'received' ? 'Recibido' : 'Enviado'}
+                    {tx.type === 'received' ? Strings.received : Strings.sent}
                   </span>
                 </div>
               </td>
@@ -115,7 +115,7 @@ export function TransactionTable({ transactions = [] }) {
                   variant={tx.status === 'completed' ? 'default' : tx.status === 'pending' ? 'secondary' : 'outline'}
                   className="text-xs"
                 >
-                  {tx.status === 'completed' ? 'Completado' : tx.status === 'pending' ? 'Pendiente' : 'Fallido'}
+                  {tx.status === 'completed' ? Strings.completed : tx.status === 'pending' ? Strings.pending : Strings.failed}
                 </Badge>
               </td>
 

@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcryptjs';
+import * as crypto from 'crypto';
 import { CustomLoggerService } from 'src/common/logger/logger.service';
 import { DataSource, Not, Repository } from 'typeorm';
 import { HandleException } from '../../common/exceptions/handler/handle.exception';
@@ -19,6 +20,7 @@ import { BaseService } from '../base/base.service';
 import { OwnershipEntity } from '../ownership/entities/ownership.entity';
 import { TransactionEntity } from '../marketplace/entities/transaction.entity';
 import { PropertyEntity } from '../properties/entities/property.entity';
+import { StellarService } from '../stellar/stellar.service';
 
 @Injectable()
 export class UserService extends BaseService<UserEntity, CreateUserDto, UpdateUserDto> {
@@ -36,6 +38,7 @@ export class UserService extends BaseService<UserEntity, CreateUserDto, UpdateUs
     @InjectRepository(PropertyEntity)
     private readonly propertyRepository: Repository<PropertyEntity>,
     private readonly logger: CustomLoggerService,
+    private readonly stellarService: StellarService,
   ) {
     super();
     this.repository = this.userRepository;
@@ -148,9 +151,41 @@ export class UserService extends BaseService<UserEntity, CreateUserDto, UpdateUs
       );
 
       const hashedPassword = await hashPassword(createUserDTO.password);
+
+      // Si no viene wallet en el DTO, generar una automáticamente
+      let stellarPublicKey = createUserDTO.stellarPublicKey;
+      let stellarSecretKeyEncrypted = createUserDTO.stellarSecretKeyEncrypted;
+
+      if (!stellarPublicKey || !stellarSecretKeyEncrypted) {
+        console.log(`[UserService] Auto-generating Stellar wallet for new user: ${createUserDTO.email}`);
+
+        const stellarKeypair = this.stellarService.generateKeypair();
+        stellarPublicKey = stellarKeypair.publicKey;
+        stellarSecretKeyEncrypted = this.encryptSecretKey(stellarKeypair.secretKey);
+
+        // Fund account on testnet
+        if (process.env.STELLAR_NETWORK === 'testnet') {
+          try {
+            await this.stellarService.fundAccount(stellarKeypair.publicKey);
+            console.log(`[UserService] Auto-funded account ${stellarKeypair.publicKey}`);
+          } catch (error) {
+            console.warn('[UserService] Failed to fund account:', error.message);
+          }
+
+          try {
+            await this.stellarService.mintUsdcMock(stellarKeypair.publicKey, 10000);
+            console.log(`[UserService] Auto-minted 10,000 USDC to ${stellarKeypair.publicKey}`);
+          } catch (error) {
+            console.warn('[UserService] Failed to mint USDC:', error.message);
+          }
+        }
+      }
+
       const user = this.userRepository.create({
         ...createUserDTO,
         password: hashedPassword,
+        stellarPublicKey,
+        stellarSecretKeyEncrypted,
       });
 
       const savedUser = await this.userRepository.save(user);
@@ -162,6 +197,20 @@ export class UserService extends BaseService<UserEntity, CreateUserDto, UpdateUs
         error.message || 'Error al crear el usuario',
       );
     }
+  }
+
+  private encryptSecretKey(secretKey: string): string {
+    const algorithm = 'aes-256-gcm';
+    const key = crypto.scryptSync(process.env.JWT_SECRET || 'default-secret', 'salt', 32);
+    const iv = crypto.randomBytes(16);
+    const cipher = crypto.createCipheriv(algorithm, key, iv);
+
+    let encrypted = cipher.update(secretKey, 'utf8', 'hex');
+    encrypted += cipher.final('hex');
+
+    const authTag = cipher.getAuthTag();
+
+    return `${iv.toString('hex')}:${authTag.toString('hex')}:${encrypted}`;
   }
 
   async update(updateUserDTO: UpdateUserDto): Promise<UserEntity> {

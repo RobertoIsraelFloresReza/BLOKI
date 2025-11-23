@@ -12,7 +12,7 @@ import { useTranslation } from 'react-i18next'
 /**
  * Desktop Navbar Component - Floating (usando fixed porque overflow-x rompe sticky)
  */
-function DesktopNavbar({ activeTab, onTabChange, user, showFilters, filters, selectedFilter, onFilterChange, navItems }) {
+function DesktopNavbar({ activeTab, onTabChange, user, showFilters, filters, selectedFilter, onFilterChange, navItems, searchQuery, onSearchChange }) {
   const navigate = useNavigate()
   const Strings = useStrings()
 
@@ -71,7 +71,7 @@ function DesktopNavbar({ activeTab, onTabChange, user, showFilters, filters, sel
                 >
                   <User className="w-4 h-4" />
                   <span className="max-w-[100px] truncate">
-                    {user ? (user.name || user.email) : (Strings.profile || 'Perfil')}
+                    {user ? (user.name || user.email) : Strings.profile}
                   </span>
 
                   {activeTab === 'profile' && (
@@ -114,9 +114,19 @@ function DesktopNavbar({ activeTab, onTabChange, user, showFilters, filters, sel
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                   <input
                     type="text"
-                    placeholder="Buscar propiedades..."
-                    className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                    placeholder={Strings.searchProperties}
+                    value={searchQuery || ''}
+                    onChange={(e) => onSearchChange?.(e.target.value)}
+                    className="w-full pl-10 pr-10 py-2 bg-background border border-border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                   />
+                  {searchQuery && (
+                    <button
+                      onClick={() => onSearchChange?.('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -217,7 +227,7 @@ function MobileBottomNav({ activeTab, onTabChange, navItems }) {
 /**
  * Main Navbar Component
  */
-export function Navbar({ activeTab = 'marketplace', onTabChange, user, onLogout, showFilters = false, filters = [], selectedFilter = 'all', onFilterChange, onMobileSearchClick }) {
+export function Navbar({ activeTab = 'marketplace', onTabChange, user, onLogout, showFilters = false, filters = [], selectedFilter = 'all', onFilterChange, onMobileSearchClick, searchQuery = '', onSearchChange }) {
   const navigate = useNavigate()
   const [showWalletModal, setShowWalletModal] = useState(false)
   const [showProfileModal, setShowProfileModal] = useState(false)
@@ -252,21 +262,21 @@ export function Navbar({ activeTab = 'marketplace', onTabChange, user, onLogout,
     },
     {
       id: 'seller',
-      label: Strings.properties || 'Propiedades',
+      label: Strings.properties,
       icon: Store,
       desktop: true,
       mobile: true
     },
     {
       id: 'evaluators',
-      label: 'Evaluadores',
+      label: Strings.evaluators,
       icon: Award,
       desktop: true,
       mobile: true
     },
     {
       id: 'wallet',
-      label: Strings.wallet || 'Wallet',
+      label: Strings.wallet,
       icon: Wallet,
       desktop: true,
       mobile: false
@@ -292,6 +302,8 @@ export function Navbar({ activeTab = 'marketplace', onTabChange, user, onLogout,
         selectedFilter={selectedFilter}
         onFilterChange={onFilterChange}
         navItems={navItems}
+        searchQuery={searchQuery}
+        onSearchChange={onSearchChange}
       />
 
       {/* Mobile Top Header */}
@@ -329,7 +341,7 @@ export function Navbar({ activeTab = 'marketplace', onTabChange, user, onLogout,
         <DrawerContent className="lg:hidden">
           <div className="mx-auto w-full max-w-sm">
             <DrawerHeader>
-              <DrawerTitle className="text-center">Configuración</DrawerTitle>
+              <DrawerTitle className="text-center">{Strings.settings}</DrawerTitle>
             </DrawerHeader>
             <div className="p-4 space-y-3">
               {/* Profile Section */}
@@ -345,10 +357,10 @@ export function Navbar({ activeTab = 'marketplace', onTabChange, user, onLogout,
                     <User className="w-6 h-6 text-primary" />
                   </div>
                   <div className="flex-1 text-left">
-                    <p className="font-semibold text-foreground">{user?.name || 'Usuario'}</p>
+                    <p className="font-semibold text-foreground">{user?.name || Strings.user}</p>
                     <p className="text-sm text-muted-foreground flex items-center gap-1">
                       <Mail className="w-3 h-3" />
-                      {user?.email || 'email@example.com'}
+                      {user?.email || Strings.defaultEmail}
                     </p>
                   </div>
                   <ChevronRight className="w-5 h-5 text-muted-foreground" />
@@ -369,8 +381,8 @@ export function Navbar({ activeTab = 'marketplace', onTabChange, user, onLogout,
                       <Wallet className="w-5 h-5 text-primary" />
                     </div>
                     <div className="text-left">
-                      <p className="font-semibold text-foreground">Cartera</p>
-                      <p className="text-xs text-muted-foreground">Ver mi cartera</p>
+                      <p className="font-semibold text-foreground">{Strings.wallet}</p>
+                      <p className="text-xs text-muted-foreground">{Strings.viewMyWallet}</p>
                     </div>
                   </div>
                   <ChevronRight className="w-5 h-5 text-muted-foreground" />
@@ -390,7 +402,7 @@ export function Navbar({ activeTab = 'marketplace', onTabChange, user, onLogout,
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <Languages className="w-5 h-5 text-muted-foreground" />
-                      <span className="font-medium text-foreground">Idioma</span>
+                      <span className="font-medium text-foreground">{Strings.language || 'Idioma'}</span>
                     </div>
                     <span className="text-sm text-muted-foreground font-medium">
                       {i18n.language === 'en' ? 'English' : 'Español'}
@@ -410,10 +422,10 @@ export function Navbar({ activeTab = 'marketplace', onTabChange, user, onLogout,
                       ) : (
                         <Sun className="w-5 h-5 text-muted-foreground" />
                       )}
-                      <span className="font-medium text-foreground">Modo</span>
+                      <span className="font-medium text-foreground">{Strings.mode}</span>
                     </div>
                     <span className="text-sm text-muted-foreground font-medium">
-                      {theme === 'dark' ? 'Oscuro' : 'Blanco'}
+                      {theme === 'dark' ? Strings.dark : Strings.light}
                     </span>
                   </div>
                 </button>

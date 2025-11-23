@@ -1,13 +1,50 @@
+# Node
 node_modules
 npm-debug.log
+yarn-error.log
+
+# Build outputs
 dist
+*.log
+
+# Git
 .git
 .gitignore
-README.md
-.env
-.env.local
-.env.*.local
-coverage
+
+# IDE
 .vscode
 .idea
+*.swp
+*.swo
+.DS_Store
+
+# Env files
+.env
+.env.*
+!.env.example
+
+# Documentation
 *.md
+docs/
+
+# Test files
+coverage
+test/
+*.test.ts
+*.spec.ts
+
+# Stellar workspace (not needed in backend container)
+stellar-blocki/
+
+# Uploads and logs (mounted as volumes)
+uploads/
+logs/
+
+# Docker files
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# CI/CD
+.github/
+.gitlab-ci.yml

@@ -1,8 +1,9 @@
 import { Controller, Post, Get, HttpCode, HttpStatus, Logger } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 
 @ApiTags('Admin')
+@ApiBearerAuth()
 @Controller('admin')
 export class AdminController {
   private readonly logger = new Logger(AdminController.name);

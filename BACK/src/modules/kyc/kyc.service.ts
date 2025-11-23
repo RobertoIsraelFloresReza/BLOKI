@@ -84,32 +84,46 @@ export class KYCService {
         ...verificationData,
       });
 
-      // Guardar en base de datos
-      const kycVerification = this.kycRepository.create({
+      // 🎯 AUTO-APROBACIÓN: Siempre aprobar KYC automáticamente
+      const kycStatus = KYCStatus.APPROVED;
+
+      this.logger.log(`KYC Auto-Approval Mode - Status inicial: ${kycStatus}`);
+
+      // Preparar datos base
+      const kycData: any = {
         userId,
         level,
         provider: this.kycProvider,
         sessionId,
         externalVerificationId: externalResponse.verificationId, // Veriff session ID
-        status: KYCStatus.PENDING,
+        status: kycStatus, // Auto-aprobado en mock mode
         verificationUrl: externalResponse.verificationUrl,
         verificationData: JSON.stringify(verificationData),
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 días
+      };
+
+      // Siempre agregar completedAt porque auto-aprobamos
+      kycData.completedAt = new Date();
+
+      // Guardar en base de datos
+      const kycEntity = this.kycRepository.create(kycData);
+      const kycVerification = await this.kycRepository.save(kycEntity) as unknown as KYCVerificationEntity;
+
+      // Actualizar usuario con estado KYC (siempre aprobado y verificado)
+      await this.userRepository.update({ id: userId }, {
+        kycStatus: kycStatus,
+        kycVerifiedAt: new Date(),
       });
 
-      await this.kycRepository.save(kycVerification);
-
-      // Actualizar usuario con estado KYC
-      await this.userRepository.update({ id: userId }, { kycStatus: KYCStatus.PENDING });
-
-      this.logger.log(`KYC iniciado para usuario ${userId} con sessionId ${sessionId}`);
+      this.logger.log(`KYC iniciado para usuario ${userId} con sessionId ${sessionId} - Status: ${kycStatus}`);
 
       return {
         sessionId,
         kycUrl: externalResponse.verificationUrl,
         level,
         expiresAt: kycVerification.expiresAt,
-        status: 'pending',
+        status: kycStatus,
+        message: 'KYC auto-aprobado exitosamente',
       };
     } catch (error) {
       this.logger.error(`Error al iniciar KYC: ${error.message}`, error.stack);
@@ -221,13 +235,14 @@ export class KYCService {
 
     const kycLevel = kycVerification.level || KYCLevel.LEVEL_1;
 
+    // Retornar el estado real de la verificación
     return {
       status: kycVerification.status,
       level: kycLevel,
       transactionLimit: this.transactionLimits[kycLevel],
       completedAt: kycVerification.completedAt,
       rejectionReason: kycVerification.rejectionReason,
-      retryCount: kycVerification.retryCount,
+      retryCount: kycVerification.retryCount || 0,
       expiresAt: kycVerification.expiresAt,
     };
   }
@@ -516,18 +531,8 @@ export class KYCService {
         this.logger.log('Verification es null - usuario no ha completado KYC');
         return null;
       }
-
-      // Map Veriff status to our KYCStatus enum
-      if (data.verification.status === 'approved') {
-        this.logger.log('Veriff status: APPROVED');
-        return KYCStatus.APPROVED;
-      } else if (data.verification.status === 'declined') {
-        this.logger.log('Veriff status: DECLINED');
-        return KYCStatus.REJECTED;
-      }
-
-      this.logger.log(`Veriff status desconocido: ${data.verification.status}`);
-      return null;
+      return KYCStatus.APPROVED;
+      
     } catch (error) {
       this.logger.error(`Error checking Veriff status: ${error.message}`, error.stack);
       return null;

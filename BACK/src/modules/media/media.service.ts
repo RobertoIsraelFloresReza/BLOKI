@@ -4,7 +4,6 @@ import { Repository, In } from 'typeorm';
 import { MediaEntity, MediaFileType, MediaEntityType } from './entity/media.entity';
 import { CreateMediaDto } from './dto/create-media.dto';
 import { UpdateMediaDto } from './dto/update-media.dto';
-import { CloudflareService } from '../cloudflare/cloudflare.service';
 
 @Injectable()
 export class MediaService {
@@ -13,31 +12,23 @@ export class MediaService {
   constructor(
     @InjectRepository(MediaEntity)
     private readonly mediaRepository: Repository<MediaEntity>,
-    private readonly cloudflareService: CloudflareService,
   ) {}
 
   /**
-   * Upload files and save to database
-   * @param files - Array of Multer files
-   * @param folder - Cloudflare folder prefix
+   * Create media records from URLs
+   * @param urls - Array of media URLs (already uploaded to Cloudflare)
    * @returns Array of saved media entities
    */
-  async uploadFiles(files: Express.Multer.File[], folder: string = 'general'): Promise<MediaEntity[]> {
+  async createFromUrls(urls: string[]): Promise<MediaEntity[]> {
     try {
-      this.logger.log(`Starting upload of ${files.length} media files to folder: ${folder}`);
+      this.logger.log(`Creating ${urls.length} media records from URLs`);
 
-      // Upload all files to Cloudflare in parallel
-      const uploadedFiles = await Promise.all(
-        files.map((file) => this.cloudflareService.uploadToCloudflare(file, folder)),
-      );
-
-      // Map to database entities with file type detection
-      const mediaToSave = uploadedFiles.map((result, index) => {
-        const mimeType = files[index].mimetype;
-        const fileType = this.detectFileType(mimeType);
+      // Map to database entities
+      const mediaToSave = urls.map((url, index) => {
+        const fileType = this.detectFileTypeFromUrl(url);
 
         return {
-          url: result.url,
+          url,
           fileType,
           displayOrder: index,
         } as Partial<MediaEntity>;
@@ -45,12 +36,12 @@ export class MediaService {
 
       // Save to database
       const savedMedia = await this.mediaRepository.save(mediaToSave);
-      this.logger.log(`Successfully uploaded and saved ${savedMedia.length} media files`);
+      this.logger.log(`Successfully saved ${savedMedia.length} media records`);
 
       return savedMedia;
     } catch (error) {
-      this.logger.error(`Failed to upload files: ${error.message}`, error.stack);
-      throw new BadRequestException(`Error uploading media files: ${error.message}`);
+      this.logger.error(`Failed to create media records: ${error.message}`, error.stack);
+      throw new BadRequestException(`Error creating media records: ${error.message}`);
     }
   }
 
@@ -135,7 +126,8 @@ export class MediaService {
   }
 
   /**
-   * Delete files (Cloudflare + DB)
+   * Delete media records from DB only
+   * Note: Files should be deleted from Cloudflare separately if needed
    */
   async deleteFiles(ids: number[]): Promise<{ message: string; deletedCount: number }> {
     try {
@@ -152,38 +144,35 @@ export class MediaService {
         throw new BadRequestException('No media files found to delete');
       }
 
-      // Delete from Cloudflare in parallel
-      await Promise.all(
-        mediaRecords.map((media) => this.cloudflareService.deleteFromCloudflare(media.url)),
-      );
-
       // Delete from database
       const deleteResult = await this.mediaRepository.delete({ id: In(ids) });
 
       this.logger.log(`Deleted ${deleteResult.affected} media records`);
 
       return {
-        message: 'Media files deleted successfully',
+        message: 'Media records deleted successfully',
         deletedCount: deleteResult.affected || 0,
       };
     } catch (error) {
       if (error instanceof BadRequestException) {
         throw error;
       }
-      this.logger.error(`Failed to delete files: ${error.message}`, error.stack);
-      throw new BadRequestException(`Error deleting media files: ${error.message}`);
+      this.logger.error(`Failed to delete media records: ${error.message}`, error.stack);
+      throw new BadRequestException(`Error deleting media records: ${error.message}`);
     }
   }
 
   /**
-   * Helper: Detect file type from MIME type
+   * Helper: Detect file type from URL extension
    */
-  private detectFileType(mimeType: string): MediaFileType {
-    if (mimeType.startsWith('image/')) {
+  private detectFileTypeFromUrl(url: string): MediaFileType {
+    const extension = url.split('.').pop()?.toLowerCase();
+
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg'].includes(extension || '')) {
       return MediaFileType.IMAGE;
-    } else if (mimeType === 'application/pdf') {
+    } else if (extension === 'pdf') {
       return MediaFileType.PDF;
-    } else if (mimeType.startsWith('video/')) {
+    } else if (['mp4', 'webm', 'ogg', 'mov', 'avi'].includes(extension || '')) {
       return MediaFileType.VIDEO;
     }
     return MediaFileType.OTHER;

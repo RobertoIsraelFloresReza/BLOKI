@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Award, Search, Star, MapPin, Mail, Globe, CheckCircle } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardContent, Input, Badge, Spinner } from '@/components/ui'
+import { Award, Star, MapPin, Mail, Globe, CheckCircle } from 'lucide-react'
+import { Card, CardHeader, CardTitle, CardContent, Badge, Spinner, AnimatedText, ScrollReveal } from '@/components/ui'
+import { SearchBar } from '@/components/marketplace/SearchBar'
 import { useEvaluators } from '@/hooks'
 import { useStrings } from '@/utils/localizations/useStrings'
 
@@ -40,85 +41,47 @@ export function EvaluatorsPage() {
   })
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-primary/[0.02] to-background pb-20">
-      {/* Header */}
-      <div className="border-b border-border/50 bg-gradient-to-br from-primary/10 via-primary/5 to-secondary/5 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="text-center">
-            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-primary to-primary/70 shadow-lg mb-6 transform hover:scale-105 transition-transform">
-              <Award className="w-10 h-10 text-white" />
-            </div>
-            <h1 className="text-5xl font-bold text-foreground mb-4 tracking-tight">
-              {Strings.certifiedEvaluators || 'Evaluadores Certificados'}
+    <div className="min-h-screen bg-gradient-to-b from-background via-primary/[0.01] to-background pb-20">
+      {/* Clean Professional Header */}
+      <div className="relative py-8 md:py-10 lg:py-12 border-b border-border/40">
+        <div className="max-w-7xl mx-auto px-6 sm:px-6 lg:px-8 relative z-10">
+          {/* Title Section */}
+          <div className="text-center mb-8">
+            <h1 className="font-open-sans font-extrabold mb-4 leading-none">
+              <div className="text-4xl md:text-5xl lg:text-6xl mb-2">
+                <AnimatedText
+                  text={Strings.evaluatorsTitleLine1}
+                  type="wave"
+                  delay={0}
+                />
+              </div>
+              <div className="text-5xl md:text-6xl lg:text-7xl bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-gradient-x">
+                <AnimatedText
+                  text={Strings.evaluatorsTitleLine2}
+                  type="wave"
+                  delay={0.2}
+                />
+              </div>
             </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              {Strings.evaluatorsDescription || 'Empresas verificadas por Blocki para garantizar valuaciones profesionales y prevenir fraudes'}
-            </p>
-          </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-            <Card className="bg-card/80 backdrop-blur-md border-primary/20 hover:border-primary/40 transition-all hover:shadow-xl">
-              <CardContent className="pt-6 pb-6">
-                <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10 mb-3">
-                    <Award className="w-6 h-6 text-primary" />
-                  </div>
-                  <p className="text-4xl font-bold text-primary mb-1">{safeEvaluators.length}</p>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    {Strings.activeEvaluators || 'Evaluadores Activos'}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-card/80 backdrop-blur-md border-secondary/20 hover:border-secondary/40 transition-all hover:shadow-xl">
-              <CardContent className="pt-6 pb-6">
-                <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-secondary/10 mb-3">
-                    <CheckCircle className="w-6 h-6 text-secondary" />
-                  </div>
-                  <p className="text-4xl font-bold text-secondary mb-1">
-                    {safeEvaluators.reduce((sum, e) => sum + (e.propertiesEvaluated || 0), 0).toLocaleString()}
-                  </p>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    {Strings.propertiesEvaluated || 'Propiedades Evaluadas'}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-card/80 backdrop-blur-md border-green-500/20 hover:border-green-500/40 transition-all hover:shadow-xl">
-              <CardContent className="pt-6 pb-6">
-                <div className="text-center">
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-green-500/10 mb-3">
-                    <Star className="w-6 h-6 text-green-500 fill-green-500" />
-                  </div>
-                  <p className="text-4xl font-bold text-green-500 mb-1">
-                    {safeEvaluators.length > 0
-                      ? (safeEvaluators.reduce((sum, e) => sum + (e.rating || 0), 0) / safeEvaluators.length).toFixed(1)
-                      : '0.0'
-                    }
-                  </p>
-                  <p className="text-sm font-medium text-muted-foreground">
-                    {Strings.averageRating || 'Rating Promedio'}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Subtitle */}
+            <ScrollReveal delay={0.6} duration={0.6}>
+              <p className="text-base md:text-lg text-muted-foreground max-w-3xl mx-auto font-open-sans leading-snug">
+                {Strings.evaluatorsDescription}
+              </p>
+            </ScrollReveal>
           </div>
 
           {/* Search Bar */}
-          <div className="mt-8 max-w-2xl mx-auto">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-              <Input
-                type="text"
+          <ScrollReveal delay={0.4} duration={0.6}>
+            <div className="max-w-2xl mx-auto">
+              <SearchBar
                 placeholder={Strings.searchEvaluators || 'Buscar evaluadores...'}
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
+                onChange={setSearchQuery}
               />
             </div>
-          </div>
+          </ScrollReveal>
         </div>
       </div>
 
@@ -126,11 +89,14 @@ export function EvaluatorsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Loading State */}
         {isLoading && (
-          <div className="flex justify-center items-center py-20">
-            <Spinner size="lg" />
-            <span className="ml-3 text-muted-foreground">
+          <div className="flex flex-col justify-center items-center py-20 gap-4">
+            <div className="relative">
+              <Spinner size="xl" variant="orbit" />
+              <div className="absolute inset-0 -z-10 bg-primary/20 blur-2xl rounded-full animate-pulse" />
+            </div>
+            <p className="text-muted-foreground animate-pulse">
               {Strings.loadingEvaluators || 'Cargando evaluadores...'}
-            </span>
+            </p>
           </div>
         )}
 

@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { MapPin, TrendingUp, Users, Home, BedDouble, Bath, Maximize, CheckCircle, Building2, Hotel, Warehouse, MoreVertical, Edit, Trash2, Eye, Award, Plus, Minus } from 'lucide-react'
+import { MapPin, TrendingUp, Users, Home, BedDouble, Bath, Maximize, CheckCircle, Building2, Hotel, Warehouse, MoreVertical, Edit, Trash2, Eye, Award, Plus, Minus, ShoppingCart } from 'lucide-react'
 import {
   Card,
   CardHeader,
@@ -22,9 +22,10 @@ import { useStrings } from '@/utils/localizations/useStrings'
  * @param {Function} onViewDetails - Callback when view details is clicked
  * @param {Function} onEdit - Optional callback for edit action (seller mode)
  * @param {Function} onDelete - Optional callback for delete action (seller mode)
+ * @param {Function} onCreateListing - Optional callback for create listing action (seller mode)
  * @param {boolean} showActions - Show edit/delete actions menu (seller mode)
  */
-export function PropertyCard({ property, onViewDetails, onEdit, onDelete, showActions = false }) {
+export function PropertyCard({ property, onViewDetails, onEdit, onDelete, onCreateListing, showActions = false }) {
   const [tilt, setTilt] = useState({ rotateX: 0, rotateY: 0 })
   const [showMenu, setShowMenu] = useState(false)
   const [expandedTitle, setExpandedTitle] = useState(false)
@@ -32,18 +33,29 @@ export function PropertyCard({ property, onViewDetails, onEdit, onDelete, showAc
   const cardRef = useRef(null)
   const Strings = useStrings()
 
+  // Helper function to clean PostgreSQL array URLs (removes {" and "} escapes)
+  const cleanImageUrl = (url) => {
+    if (!url) return '/blocki_general.jpg'
+    // Remove PostgreSQL array escapes: {" at start and "} at end
+    return url.replace(/^\{?"?/, '').replace(/"?\}?$/, '').replace(/\\"/g, '"')
+  }
+
   // Normalize backend data (support both old and new schema)
   const id = property.id
   const title = property.name || property.title
   const location = property.address || property.location
-  const image = property.images?.[0] || property.image || '/blocki_general.jpg'
-  const price = property.valuation || property.price
+  const rawImage = property.images?.[0] || property.image
+  const image = cleanImageUrl(rawImage)
+
+  // Convert strings to numbers (backend sends them as strings with 7 decimals)
+  const price = parseFloat(property.valuation || property.price || 0)
+  const totalTokens = parseFloat(property.totalSupply || property.totalTokens || 0)
+  const tokensAvailable = parseFloat(property.availableTokens || property.tokensAvailable || totalTokens)
+
   const bedrooms = property.metadata?.bedrooms || property.bedrooms
   const bathrooms = property.metadata?.bathrooms || property.bathrooms
-  const area = property.metadata?.area || property.area
-  const totalTokens = property.totalSupply || property.totalTokens
-  const tokensAvailable = property.availableTokens || property.tokensAvailable || totalTokens
-  const roi = property.roi || 0
+  const area = parseFloat(property.metadata?.area || property.area || 0)
+  const roi = parseFloat(property.roi || 0)
   const verified = property.verified !== undefined ? property.verified : true
   const category = property.metadata?.category || property.category || 'houses'
   const evaluator = property.evaluator || null
@@ -173,7 +185,7 @@ export function PropertyCard({ property, onViewDetails, onEdit, onDelete, showAc
                       className="w-full px-4 py-2.5 text-left text-sm hover:bg-accent transition-colors flex items-center gap-2"
                     >
                       <Eye className="w-4 h-4" />
-                      {Strings.viewProperty || 'View Property'}
+                      {Strings.viewProperty}
                     </button>
                     <button
                       onClick={() => {
@@ -183,8 +195,21 @@ export function PropertyCard({ property, onViewDetails, onEdit, onDelete, showAc
                       className="w-full px-4 py-2.5 text-left text-sm hover:bg-accent transition-colors flex items-center gap-2"
                     >
                       <Edit className="w-4 h-4" />
-                      {Strings.editProperty || 'Edit Property'}
+                      {Strings.editProperty}
                     </button>
+                    {onCreateListing && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setShowMenu(false)
+                          onCreateListing?.(property)
+                        }}
+                        className="w-full px-4 py-2.5 text-left text-sm hover:bg-accent transition-colors flex items-center gap-2"
+                      >
+                        <ShoppingCart className="w-4 h-4" />
+                        {Strings.createListing || 'Create Listing'}
+                      </button>
+                    )}
                     <div className="h-px bg-border" />
                     <button
                       onClick={() => {
@@ -194,7 +219,7 @@ export function PropertyCard({ property, onViewDetails, onEdit, onDelete, showAc
                       className="w-full px-4 py-2.5 text-left text-sm hover:bg-destructive/10 text-destructive transition-colors flex items-center gap-2"
                     >
                       <Trash2 className="w-4 h-4" />
-                      {Strings.deleteProperty || 'Delete Property'}
+                      {Strings.deleteProperty}
                     </button>
                   </div>
                 </>
@@ -214,8 +239,8 @@ export function PropertyCard({ property, onViewDetails, onEdit, onDelete, showAc
         )}
       </div>
 
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 leading-relaxed">
           <span className={expandedTitle ? '' : 'truncate'}>
             {title}
           </span>
@@ -226,7 +251,7 @@ export function PropertyCard({ property, onViewDetails, onEdit, onDelete, showAc
                 setExpandedTitle(!expandedTitle)
               }}
               className="flex-shrink-0 p-1 hover:bg-accent rounded transition-colors"
-              aria-label={expandedTitle ? 'Collapse title' : 'Expand title'}
+              aria-label={expandedTitle ? Strings.collapseTitle : Strings.expandTitle}
             >
               {expandedTitle ? (
                 <Minus className="w-3 h-3 text-muted-foreground" />
@@ -236,7 +261,7 @@ export function PropertyCard({ property, onViewDetails, onEdit, onDelete, showAc
             </button>
           )}
         </CardTitle>
-        <CardDescription className="flex items-center gap-1">
+        <CardDescription className="flex items-center gap-1 leading-relaxed pb-1">
           <MapPin className="w-3 h-3 flex-shrink-0" />
           <span className={expandedLocation ? '' : 'truncate'}>
             {location}
@@ -248,7 +273,7 @@ export function PropertyCard({ property, onViewDetails, onEdit, onDelete, showAc
                 setExpandedLocation(!expandedLocation)
               }}
               className="flex-shrink-0 p-1 hover:bg-accent rounded transition-colors"
-              aria-label={expandedLocation ? 'Collapse location' : 'Expand location'}
+              aria-label={expandedLocation ? Strings.collapseLocation : Strings.expandLocation}
             >
               {expandedLocation ? (
                 <Minus className="w-3 h-3 text-muted-foreground" />
@@ -260,22 +285,22 @@ export function PropertyCard({ property, onViewDetails, onEdit, onDelete, showAc
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 pb-4">
         {/* Valuation in USDC */}
         <div>
-          <p className="text-xs text-muted-foreground mb-1">{Strings.propertyValuation}</p>
+          <p className="text-xs text-muted-foreground mb-1 leading-relaxed">{Strings.propertyValuation}</p>
           <div className="flex items-baseline gap-2">
-            <p className="text-2xl font-bold text-foreground">
+            <p className="text-2xl font-bold text-foreground leading-tight">
               ${price?.toLocaleString('en-US') || '0'}
             </p>
-            <span className="text-sm font-medium text-muted-foreground">USDC</span>
+            <span className="text-sm font-medium text-muted-foreground leading-tight">USDC</span>
           </div>
         </div>
 
         {/* Property Details */}
         {area && (
           <div className="flex items-center gap-3 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 leading-relaxed">
               <Maximize className="w-4 h-4" />
               <span>{area?.toLocaleString() || area} {Strings.sqft}</span>
             </div>
@@ -285,20 +310,20 @@ export function PropertyCard({ property, onViewDetails, onEdit, onDelete, showAc
         {/* Token Info */}
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <p className="text-xs text-muted-foreground">{Strings.totalTokens}</p>
-            <p className="text-sm font-semibold">{totalTokens?.toLocaleString() || '0'}</p>
+            <p className="text-xs text-muted-foreground leading-relaxed pb-1">{Strings.totalTokens}</p>
+            <p className="text-sm font-semibold leading-tight">{totalTokens?.toLocaleString() || '0'}</p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">{Strings.available}</p>
-            <p className="text-sm font-semibold text-secondary">
+            <p className="text-xs text-muted-foreground leading-relaxed pb-1">{Strings.available}</p>
+            <p className="text-sm font-semibold text-secondary leading-tight">
               {availableTokens?.toLocaleString() || '0'}
             </p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">{Strings.pricePerToken}</p>
+            <p className="text-xs text-muted-foreground leading-relaxed pb-1">{Strings.pricePerToken}</p>
             <div className="flex items-baseline gap-1">
-              <p className="text-sm font-semibold">${pricePerToken || '0'}</p>
-              <span className="text-[10px] text-muted-foreground">USDC</span>
+              <p className="text-sm font-semibold leading-tight">${pricePerToken || '0'}</p>
+              <span className="text-[10px] text-muted-foreground leading-tight">USDC</span>
             </div>
           </div>
         </div>
@@ -307,8 +332,8 @@ export function PropertyCard({ property, onViewDetails, onEdit, onDelete, showAc
         {tokensSoldPercentage > 0 && (
           <div className="flex items-center gap-2 p-3 rounded-lg bg-accent/30">
             <Users className="w-4 h-4 text-muted-foreground" />
-            <span className="text-xs text-muted-foreground">
-              {Math.round(tokensSoldPercentage)}% {Strings.fundedByInvestors}
+            <span className="text-xs text-muted-foreground leading-relaxed">
+              {Math.round(tokensSoldPercentage)}% {Strings.funded}
             </span>
           </div>
         )}

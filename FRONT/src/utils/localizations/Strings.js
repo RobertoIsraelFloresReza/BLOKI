@@ -264,6 +264,8 @@ class StringsBase {
   // Evaluators Page
   // ============================================
   static certifiedEvaluators = 'certifiedEvaluators'
+  static evaluatorsTitleLine1 = 'evaluatorsTitleLine1'
+  static evaluatorsTitleLine2 = 'evaluatorsTitleLine2'
   static evaluatorsDescription = 'evaluatorsDescription'
   static activeEvaluators = 'activeEvaluators'
   static propertiesEvaluated = 'propertiesEvaluated'
@@ -284,6 +286,253 @@ class StringsBase {
   static backToEvaluators = 'backToEvaluators'
   static evaluatorNotFound = 'evaluatorNotFound'
   static noPropertiesEvaluatedYet = 'noPropertiesEvaluatedYet'
+
+  // ============================================
+  // Auth Page
+  // ============================================
+  static welcomeBack = 'welcomeBack'
+  static createYourAccount = 'createYourAccount'
+  static signInToManageProperties = 'signInToManageProperties'
+  static getStellarWalletInstantly = 'getStellarWalletInstantly'
+  static emailPlaceholder = 'emailPlaceholder'
+  static passwordPlaceholder = 'passwordPlaceholder'
+  static rememberMe = 'rememberMe'
+  static forgotPassword = 'forgotPassword'
+  static signingIn = 'signingIn'
+  static signIn = 'signIn'
+  static dontHaveAccount = 'dontHaveAccount'
+  static createOne = 'createOne'
+  static personalInfo = 'personalInfo'
+  static security = 'security'
+  static fullNamePlaceholder = 'fullNamePlaceholder'
+  static atLeast8Characters = 'atLeast8Characters'
+  static stellarWalletIncluded = 'stellarWalletIncluded'
+  static stellarWalletAutoCreate = 'stellarWalletAutoCreate'
+  static creatingAccount = 'creatingAccount'
+  static createAccount = 'createAccount'
+  static byCreatingAccount = 'byCreatingAccount'
+  static and = 'and'
+  static alreadyHaveAccount = 'alreadyHaveAccount'
+
+  // ============================================
+  // Property Details Page
+  // ============================================
+  static loadingProperty = 'loadingProperty'
+  static errorLoadingProperty = 'errorLoadingProperty'
+  static couldNotLoadProperty = 'couldNotLoadProperty'
+  static backToMarketplace = 'backToMarketplace'
+  static propertyNotFoundDescription = 'propertyNotFoundDescription'
+  static verifiedProperty = 'verifiedProperty'
+  static instantTokenization = 'instantTokenization'
+  static highSpeedInternet = 'highSpeedInternet'
+  static privateParking = 'privateParking'
+  static swimmingPool = 'swimmingPool'
+  static highSpeedWiFi = 'highSpeedWiFi'
+  static gymAccess = 'gymAccess'
+  static security24_7 = 'security24_7'
+  static premiumWiFi = 'premiumWiFi'
+  static fitnessCenter = 'fitnessCenter'
+  static spaAndPool = 'spaAndPool'
+  static valetParking = 'valetParking'
+  static businessInternet = 'businessInternet'
+  static parkingLot = 'parkingLot'
+  static securitySystem = 'securitySystem'
+  static couldNotRetrieveWalletKey = 'couldNotRetrieveWalletKey'
+  static tokenDistribution = 'tokenDistribution'
+  static tokenizedOnStellar = 'tokenizedOnStellar'
+  static propertyFeatures = 'propertyFeatures'
+  static aboutThisProperty = 'aboutThisProperty'
+  static propertyDefaultDescription = 'propertyDefaultDescription'
+  static numberOfTokens = 'numberOfTokens'
+  static maxTokens = 'maxTokens'
+  static token = 'token'
+  static processingOnStellar = 'processingOnStellar'
+  static tokensWillAppearInWallet = 'tokensWillAppearInWallet'
+  static signInRequired = 'signInRequired'
+  static pleaseSignInToPurchase = 'pleaseSignInToPurchase'
+  static goToSignIn = 'goToSignIn'
+  static continueBrowsing = 'continueBrowsing'
+
+  // ============================================
+  // Wallet Page
+  // ============================================
+  static loadingWalletData = 'loadingWalletData'
+  static errorLoadingWallet = 'errorLoadingWallet'
+  static couldNotLoadWalletInfo = 'couldNotLoadWalletInfo'
+  static retry = 'retry'
+  static justNow = 'justNow'
+  static hoursAgo = 'hoursAgo'
+  static copied = 'copied'
+  static copy = 'copy'
+  static portfolioValue = 'portfolioValue'
+  static noInvestmentsYet = 'noInvestmentsYet'
+  static startByBuyingTokens = 'startByBuyingTokens'
+  static loadingTransactions = 'loadingTransactions'
+  static transaction = 'transaction'
+
+  // ============================================
+  // Profile Page
+  // ============================================
+  static failedToStartKYC = 'failedToStartKYC'
+  static emailUpdatedSuccess = 'emailUpdatedSuccess'
+  static passwordMinLength = 'passwordMinLength'
+  static passwordUpdatedSuccess = 'passwordUpdatedSuccess'
+  static personalInformation = 'personalInformation'
+  static updating = 'updating'
+  static updateEmail = 'updateEmail'
+  static enterNewPassword = 'enterNewPassword'
+  static confirmNewPassword = 'confirmNewPassword'
+  static updatePassword = 'updatePassword'
+  static blockchain = 'blockchain'
+  static stellarNetwork = 'stellarNetwork'
+  static securityVerification = 'securityVerification'
+  static rejected = 'rejected'
+  static completeKYCDescription = 'completeKYCDescription'
+  static starting = 'starting'
+  static retryVerification = 'retryVerification'
+  static reason = 'reason'
+  static verificationBeingReviewed = 'verificationBeingReviewed'
+  static identityVerified = 'identityVerified'
+  static accountActions = 'accountActions'
+  static redirectAfterSignOut = 'redirectAfterSignOut'
+
+  // ============================================
+  // Evaluator Profile
+  // ============================================
+  static loadingEvaluatorProfile = 'loadingEvaluatorProfile'
+  static couldNotLoadEvaluatorInfo = 'couldNotLoadEvaluatorInfo'
+  static rating = 'rating'
+  static propertyEvaluationHistory = 'propertyEvaluationHistory'
+  static allPropertiesCertifiedBy = 'allPropertiesCertifiedBy'
+  static evaluatorNoCertifications = 'evaluatorNoCertifications'
+
+  // ============================================
+  // Seller Dashboard
+  // ============================================
+  static propertyUpdatedSuccess = 'propertyUpdatedSuccess'
+  static propertyCreatedSuccess = 'propertyCreatedSuccess'
+  static confirmDeleteProperty = 'confirmDeleteProperty'
+  static propertyDeletedSuccess = 'propertyDeletedSuccess'
+  static errorDeletingProperty = 'errorDeletingProperty'
+  static loadingYourProperties = 'loadingYourProperties'
+  static errorLoadingProperties = 'errorLoadingProperties'
+  static couldNotLoadProperties = 'couldNotLoadProperties'
+  static reload = 'reload'
+
+  // ============================================
+  // Marketplace
+  // ============================================
+  static searchAndFilter = 'searchAndFilter'
+  static categories = 'categories'
+  static apply = 'apply'
+  static loadingProperties = 'loadingProperties'
+  static couldNotLoadPropertiesPleaseTryAgain = 'couldNotLoadPropertiesPleaseTryAgain'
+
+  // ============================================
+  // Components - General
+  // ============================================
+  static sold = 'sold'
+  static viewAllProperties = 'viewAllProperties'
+  static inTotal = 'inTotal'
+  static table = 'table'
+  static cards = 'cards'
+  static asset = 'asset'
+  static valueUSDC = 'valueUSDC'
+  static fromTo = 'fromTo'
+  static searchPropertiesPlaceholder = 'searchPropertiesPlaceholder'
+  static collapseTitle = 'collapseTitle'
+  static expandTitle = 'expandTitle'
+  static collapseLocation = 'collapseLocation'
+  static expandLocation = 'expandLocation'
+  static evaluators = 'evaluators'
+  static settings = 'settings'
+  static user = 'user'
+  static defaultEmail = 'defaultEmail'
+  static viewMyWallet = 'viewMyWallet'
+  static mode = 'mode'
+  static dark = 'dark'
+  static light = 'light'
+
+  // ============================================
+  // DeFi Components
+  // ============================================
+  static instantSwapToUSDC = 'instantSwapToUSDC'
+  static youPay = 'youPay'
+  static youReceive = 'youReceive'
+  static priceImpact = 'priceImpact'
+  static route = 'route'
+  static swapping = 'swapping'
+  static swapNow = 'swapNow'
+  static assetUSD = 'assetUSD'
+  static failedToLoad = 'failedToLoad'
+  static live = 'live'
+  static confidence = 'confidence'
+  static yieldEstimation = 'yieldEstimation'
+  static amountUSDC = 'amountUSDC'
+  static durationDays = 'durationDays'
+  static failedToEstimateYield = 'failedToEstimateYield'
+  static apy = 'apy'
+  static totalYield = 'totalYield'
+  static sellerShare = 'sellerShare'
+  static buyerShare = 'buyerShare'
+  static protocolShare = 'protocolShare'
+  static enterAmountDuration = 'enterAmountDuration'
+  static oracleValuation = 'oracleValuation'
+  static failedToLoadValuation = 'failedToLoadValuation'
+  static na = 'na'
+  static in = 'in'
+  static unknown = 'unknown'
+
+  // ============================================
+  // Property Upload Form
+  // ============================================
+  static house = 'house'
+  static apartment = 'apartment'
+  static hotel = 'hotel'
+  static titleRequired = 'titleRequired'
+  static locationRequired = 'locationRequired'
+  static validPriceRequired = 'validPriceRequired'
+  static validAreaRequired = 'validAreaRequired'
+  static validTokenAmountRequired = 'validTokenAmountRequired'
+  static atLeastOneImageRequired = 'atLeastOneImageRequired'
+  static propertyCreatedSuccess = 'propertyCreatedSuccess'
+  static imageUploadInfo = 'imageUploadInfo'
+  static certifiedEvaluator = 'certifiedEvaluator'
+  static selectCertifiedEvaluator = 'selectCertifiedEvaluator'
+  static noEvaluatorsAvailable = 'noEvaluatorsAvailable'
+  static verificationId = 'verificationId'
+  static verificationIdPlaceholder = 'verificationIdPlaceholder'
+  static verificationIdHelp = 'verificationIdHelp'
+  static valuationDocument = 'valuationDocument'
+  static uploadOfficialDocument = 'uploadOfficialDocument'
+  static selectEvaluatorFirst = 'selectEvaluatorFirst'
+  static uploadValuationDocument = 'uploadValuationDocument'
+  static documentUploadInfo = 'documentUploadInfo'
+  static valuationDocumentName = 'valuationDocumentName'
+  static megabytes = 'megabytes'
+  static alreadyUploaded = 'alreadyUploaded'
+  static propertyTitlePlaceholder = 'propertyTitlePlaceholder'
+  static locationPlaceholder = 'locationPlaceholder'
+  static pricePlaceholder = 'pricePlaceholder'
+  static areaPlaceholder = 'areaPlaceholder'
+  static bedroomsPlaceholder = 'bedroomsPlaceholder'
+  static bathroomsPlaceholder = 'bathroomsPlaceholder'
+  static descriptionPlaceholder = 'descriptionPlaceholder'
+  static totalTokensPlaceholder = 'totalTokensPlaceholder'
+  static pricePerToken = 'pricePerToken'
+  static enterValueToCalculate = 'enterValueToCalculate'
+
+  // ============================================
+  // OAuth2
+  // ============================================
+  static signingYouIn = 'signingYouIn'
+  static pleaseWaitAuth = 'pleaseWaitAuth'
+
+  // ============================================
+  // Wallet Components
+  // ============================================
+  static freighterNotInstalled = 'freighterNotInstalled'
+  static failedToConnectWallet = 'failedToConnectWallet'
 
   // ============================================
   // Footer

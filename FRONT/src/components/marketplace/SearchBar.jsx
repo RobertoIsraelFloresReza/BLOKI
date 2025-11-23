@@ -6,12 +6,16 @@ import { Input } from '@/components/ui'
  * Modern search bar with clear button
  * Follows Nielsen's heuristics: visibility, control, feedback
  */
+import { useStrings } from '@/utils/localizations/useStrings'
+
 export function SearchBar({
-  placeholder = "Buscar propiedades, ubicaciones...",
+  placeholder,
   value = '',
   onChange,
   className = ""
 }) {
+  const Strings = useStrings()
+  const defaultPlaceholder = placeholder || Strings.searchPropertiesPlaceholder
   const handleClear = () => {
     onChange('')
   }
@@ -26,7 +30,7 @@ export function SearchBar({
       {/* Input */}
       <input
         type="text"
-        placeholder={placeholder}
+        placeholder={defaultPlaceholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         className="w-full h-12 pl-12 pr-12 rounded-xl bg-card border border-border
@@ -44,7 +48,7 @@ export function SearchBar({
                      text-muted-foreground hover:text-foreground
                      transition-colors duration-200
                      focus:outline-none focus:ring-2 focus:ring-primary rounded-full p-1"
-          aria-label="Clear search"
+          aria-label={Strings.clearSearch}
         >
           <X className="w-4 h-4" />
         </button>

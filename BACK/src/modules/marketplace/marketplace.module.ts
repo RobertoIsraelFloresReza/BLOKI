@@ -20,6 +20,6 @@ import { StellarModule } from '../stellar/stellar.module';
   ],
   providers: [MarketplaceService],
   controllers: [MarketplaceController],
-  exports: [TypeOrmModule],
+  exports: [TypeOrmModule, MarketplaceService],
 })
 export class MarketplaceModule {}

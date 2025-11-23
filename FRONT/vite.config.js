@@ -14,4 +14,19 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Generar nombres de archivos con hash para cache busting
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]'
+      }
+    }
+  },
+  server: {
+    headers: {
+      'Cache-Control': 'no-cache',
+    }
+  }
 })

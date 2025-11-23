@@ -2,18 +2,62 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/Favicon_blocki.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/claro.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+
+    <!-- PWA Web App Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Apple iOS Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Blocki" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/claro.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/claro.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/claro.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="/claro.png" />
+
+    <!-- Safari y Web App -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#6366f1" />
 
     <!-- SEO Meta Tags -->
-    <meta name="description" content="Blocki - Inversión inmobiliaria tokenizada en LATAM con blockchain Stellar" />
-    <meta name="keywords" content="blockchain, stellar, real estate, tokenización, inversión, LATAM" />
+    <meta name="description" content="Blocki - Inversión inmobiliaria tokenizada en LATAM con blockchain Stellar. Invierte en propiedades reales de forma fraccionaria." />
+    <meta name="keywords" content="blockchain, stellar, real estate, tokenización, inversión, LATAM, propiedades, bienes raíces" />
     <meta name="author" content="Blocki Team" />
 
     <!-- Open Graph Meta Tags -->
     <meta property="og:title" content="Blocki - Inversión Inmobiliaria Tokenizada" />
-    <meta property="og:description" content="Invierte en propiedades reales con tecnología blockchain" />
+    <meta property="og:description" content="Invierte en propiedades reales de LATAM con tecnología blockchain Stellar" />
     <meta property="og:type" content="website" />
+    <meta property="og:image" content="/claro.png" />
+    <meta property="og:url" content="https://blocki.app" />
+
+    <!-- Twitter Card Meta Tags -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Blocki - Inversión Inmobiliaria Tokenizada" />
+    <meta name="twitter:description" content="Invierte en propiedades reales de LATAM con blockchain Stellar" />
+    <meta name="twitter:image" content="/claro.png" />
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Blocki",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "Web, iOS, Android",
+      "description": "Plataforma de inversión inmobiliaria tokenizada con blockchain Stellar",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
 
     <title>Blocki - Inversión Inmobiliaria Tokenizada</title>
   </head>

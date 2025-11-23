@@ -28,7 +28,7 @@ export function TransactionCards({ transactions = [] }) {
   if (transactions.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">{Strings.noTransactions || 'No hay transacciones'}</p>
+        <p className="text-muted-foreground">{Strings.noTransactions}</p>
       </div>
     )
   }
@@ -56,7 +56,7 @@ export function TransactionCards({ transactions = [] }) {
               </div>
               <div>
                 <p className="text-sm font-semibold capitalize">
-                  {tx.type === 'received' ? 'Recibido' : 'Enviado'}
+                  {tx.type === 'received' ? Strings.received : Strings.sent}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {formatDate(tx.timestamp)}
@@ -68,7 +68,7 @@ export function TransactionCards({ transactions = [] }) {
               variant={tx.status === 'completed' ? 'default' : tx.status === 'pending' ? 'secondary' : 'outline'}
               className="text-xs"
             >
-              {tx.status === 'completed' ? 'Completado' : tx.status === 'pending' ? 'Pendiente' : 'Fallido'}
+              {tx.status === 'completed' ? Strings.completed : tx.status === 'pending' ? Strings.pending : Strings.failed}
             </Badge>
           </div>
 
@@ -78,19 +78,19 @@ export function TransactionCards({ transactions = [] }) {
           {/* Amount & Asset */}
           <div className="space-y-2 mb-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Activo</span>
+              <span className="text-xs text-muted-foreground">{Strings.asset}</span>
               <span className="text-sm font-mono font-medium">{tx.asset}</span>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Cantidad</span>
+              <span className="text-xs text-muted-foreground">{Strings.amount}</span>
               <span className="text-lg font-bold">
                 {tx.type === 'received' ? '+' : '-'}{tx.amount.toLocaleString()}
               </span>
             </div>
 
             <div className="flex items-center justify-between">
-              <span className="text-xs text-muted-foreground">Valor</span>
+              <span className="text-xs text-muted-foreground">{Strings.value}</span>
               <span className="text-sm font-semibold text-muted-foreground">
                 ${tx.valueUSDC.toLocaleString()} USDC
               </span>
@@ -101,7 +101,7 @@ export function TransactionCards({ transactions = [] }) {
           <div className="pt-3 border-t border-border">
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">
-                {tx.type === 'received' ? 'De:' : 'Para:'}
+                {tx.type === 'received' ? `${Strings.from}:` : `${Strings.to}:`}
               </span>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-mono text-muted-foreground">

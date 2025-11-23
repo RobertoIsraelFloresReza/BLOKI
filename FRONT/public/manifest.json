@@ -1,0 +1,35 @@
+{
+  "name": "Blocki - Inversión Inmobiliaria Tokenizada",
+  "short_name": "Blocki",
+  "description": "Invierte en propiedades reales de LATAM con tecnología blockchain Stellar. Tokenización de bienes raíces para inversión fraccionaria.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/claro.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/claro.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/claro.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["finance", "business", "productivity"],
+  "lang": "es",
+  "dir": "ltr",
+  "scope": "/",
+  "prefer_related_applications": false
+}

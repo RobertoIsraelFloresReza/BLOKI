@@ -1,0 +1,37 @@
+{
+  "name": "blocki-zk-circuits",
+  "version": "1.0.0",
+  "description": "Zero-Knowledge circuits for Blocki property tokenization platform",
+  "scripts": {
+    "build": "./build.sh all",
+    "build:kyc": "./build.sh kyc_verification",
+    "build:investor": "./build.sh accredited_investor",
+    "build:ownership": "./build.sh ownership_proof",
+    "test": "mocha test/**/*.test.js --timeout 60000",
+    "test:kyc": "mocha test/kyc_verification.test.js --timeout 60000",
+    "test:investor": "mocha test/accredited_investor.test.js --timeout 60000",
+    "test:ownership": "mocha test/ownership_proof.test.js --timeout 60000"
+  },
+  "keywords": [
+    "zero-knowledge",
+    "zk-snarks",
+    "circom",
+    "groth16",
+    "privacy",
+    "kyc",
+    "stellar"
+  ],
+  "author": "Blocki Team",
+  "license": "MIT",
+  "devDependencies": {
+    "chai": "^4.3.10",
+    "mocha": "^10.2.0"
+  },
+  "dependencies": {
+    "circom_tester": "^0.0.19",
+    "circomlib": "^2.0.5",
+    "circomlibjs": "^0.1.7",
+    "ffjavascript": "^0.2.63",
+    "snarkjs": "^0.7.3"
+  }
+}

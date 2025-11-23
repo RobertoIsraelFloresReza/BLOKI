@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Plus, Home, DollarSign, Users, CheckCircle, Clock, XCircle } from 'lucide-react'
+import { Plus, Home, DollarSign, Users, CheckCircle, Clock, XCircle, TrendingUp } from 'lucide-react'
 import { Button, Card, CardContent, Badge, Spinner } from '@/components/ui'
 import { PropertyUploadForm } from '@/components/seller/PropertyUploadForm'
 import { PropertyCard } from '@/components/properties/PropertyCard'
 import { PropertyDetails } from '@/pages/property/PropertyDetails'
+import { CreateListingModal } from '@/components/marketplace'
 import { useStrings } from '@/utils/localizations/useStrings'
 import { useMyOwnedProperties, useProperties } from '@/hooks'
 import { useQueryClient } from '@tanstack/react-query'
@@ -21,6 +22,8 @@ export function SellerDashboard({ user }) {
   const [editingProperty, setEditingProperty] = useState(null)
   const [selectedStatus, setSelectedStatus] = useState('all')
   const [selectedProperty, setSelectedProperty] = useState(null)
+  const [showCreateListing, setShowCreateListing] = useState(false)
+  const [propertyForListing, setPropertyForListing] = useState(null)
   const Strings = useStrings()
   const queryClient = useQueryClient()
 
@@ -42,9 +45,21 @@ export function SellerDashboard({ user }) {
 
   // Calculate revenue: sum of (tokensSold * price / totalTokens) for each property
   const totalRevenue = userProperties.reduce((sum, prop) => {
-    const tokensSold = (prop.totalSupply || prop.totalTokens || 0) - (prop.availableTokens || prop.tokensAvailable || 0)
-    const pricePerToken = (prop.valuation || prop.price || 0) / (prop.totalSupply || prop.totalTokens || 1)
-    return sum + (tokensSold * pricePerToken)
+    try {
+      // Convert strings to numbers (backend sends them as strings)
+      const totalSupply = parseFloat(prop.totalSupply || prop.totalTokens || 0)
+      const availableTokens = parseFloat(prop.availableTokens || prop.tokensAvailable || 0)
+      const valuation = parseFloat(prop.valuation || prop.price || 0)
+
+      const tokensSold = totalSupply - availableTokens
+      const pricePerToken = totalSupply > 0 ? valuation / totalSupply : 0
+      const revenue = tokensSold * pricePerToken
+
+      return sum + (isNaN(revenue) ? 0 : revenue)
+    } catch (error) {
+      console.error('Error calculating revenue for property:', prop, error)
+      return sum
+    }
   }, 0)
 
   // Total investors would need ownership data - for now use a placeholder
@@ -147,9 +162,12 @@ export function SellerDashboard({ user }) {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center pb-20">
-        <div className="text-center">
-          <Spinner size="lg" />
-          <p className="mt-4 text-muted-foreground">Cargando tus propiedades...</p>
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <Spinner size="xl" variant="orbit" />
+            <div className="absolute inset-0 -z-10 bg-primary/20 blur-2xl rounded-full animate-pulse" />
+          </div>
+          <p className="text-muted-foreground animate-pulse">{Strings.loadingYourProperties}</p>
         </div>
       </div>
     )
@@ -164,13 +182,13 @@ export function SellerDashboard({ user }) {
             <Home className="w-8 h-8 text-destructive" />
           </div>
           <h3 className="text-xl font-semibold text-foreground mb-2">
-            Error al cargar propiedades
+            {Strings.errorLoadingProperties}
           </h3>
           <p className="text-muted-foreground mb-4">
-            {error?.message || 'No se pudieron cargar tus propiedades. Por favor intenta nuevamente.'}
+            {error?.message || Strings.couldNotLoadProperties}
           </p>
           <Button onClick={() => window.location.reload()}>
-            Recargar
+            {Strings.reload}
           </Button>
         </div>
       </div>
@@ -234,7 +252,7 @@ export function SellerDashboard({ user }) {
                       {Strings.totalRevenue || 'Ingresos Totales'}
                     </p>
                     <p className="text-3xl font-bold">
-                      ${(totalRevenue / 1000000).toFixed(2)}M
+                      ${totalRevenue > 0 ? (totalRevenue / 10000000).toFixed(2) : '0.00'}
                     </p>
                     <p className="text-xs text-green-500 mt-1">
                       +12.5% {Strings.thisMonth || 'este mes'}
@@ -313,6 +331,10 @@ export function SellerDashboard({ user }) {
                 onViewDetails={() => setSelectedProperty(property)}
                 onEdit={() => handleEditProperty(property)}
                 onDelete={() => handleDeleteProperty(property)}
+                onCreateListing={(property) => {
+                  setPropertyForListing(property)
+                  setShowCreateListing(true)
+                }}
               />
             ))}
           </div>
@@ -344,6 +366,25 @@ export function SellerDashboard({ user }) {
           </div>
         )}
       </div>
+
+      {/* Create Listing Modal */}
+      {showCreateListing && propertyForListing && (
+        <CreateListingModal
+          isOpen={showCreateListing}
+          onClose={(refresh) => {
+            setShowCreateListing(false)
+            setPropertyForListing(null)
+            if (refresh) {
+              // Refresh properties and marketplace data
+              queryClient.invalidateQueries({ queryKey: ['properties'] })
+              queryClient.invalidateQueries({ queryKey: ['properties', 'my-owned'] })
+              queryClient.invalidateQueries({ queryKey: ['marketplace'] })
+            }
+          }}
+          property={propertyForListing}
+          user={user}
+        />
+      )}
     </div>
   )
 }

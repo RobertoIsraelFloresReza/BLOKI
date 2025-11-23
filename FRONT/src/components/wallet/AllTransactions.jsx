@@ -26,17 +26,17 @@ export function AllTransactions({ transactions = [], onBack }) {
             className="gap-2 mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
-            Volver
+            {Strings.back}
           </Button>
 
           {/* Title & View Toggle */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-3xl font-bold text-foreground mb-2">
-                {Strings.transactionHistory || 'Historial de Transacciones'}
+                {Strings.transactionHistory}
               </h1>
               <p className="text-muted-foreground">
-                {transactions.length} {transactions.length === 1 ? 'transacción' : 'transacciones'} en total
+                {transactions.length} {transactions.length === 1 ? Strings.transaction : Strings.transactions || 'transacciones'} {Strings.inTotal}
               </p>
             </div>
 
@@ -51,7 +51,7 @@ export function AllTransactions({ transactions = [], onBack }) {
                 }`}
               >
                 <Table2 className="w-4 h-4" />
-                <span className="hidden sm:inline">Tabla</span>
+                <span className="hidden sm:inline">{Strings.table}</span>
               </button>
               <button
                 onClick={() => setViewMode('cards')}
@@ -62,7 +62,7 @@ export function AllTransactions({ transactions = [], onBack }) {
                 }`}
               >
                 <LayoutGrid className="w-4 h-4" />
-                <span className="hidden sm:inline">Cards</span>
+                <span className="hidden sm:inline">{Strings.cards}</span>
               </button>
             </div>
           </div>

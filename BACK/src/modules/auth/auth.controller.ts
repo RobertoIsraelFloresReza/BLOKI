@@ -58,6 +58,12 @@ export class AuthController {
     return this.authService.getDecryptedSecretKey(req.user.id);
   }
 
+  @Post('wallet/regenerate')
+  @ApiBody({ required: false })
+  regenerateWallet(@Request() req) {
+    return this.authService.regenerateWallet(req.user.id);
+  }
+
   @Post('logout')
   logout() {
     return this.authService.logout();

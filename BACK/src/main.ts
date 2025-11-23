@@ -16,6 +16,9 @@ async function main() {
   const reflector = app.get(Reflector);
   const configService = app.get(ConfigService);
 
+  // Trust proxy - needed when behind nginx/reverse proxy
+  app.set('trust proxy', 1); // Trust first proxy (nginx)
+
   // Create uploads directory if it doesn't exist
   const uploadsDir = join(__dirname, '..', 'uploads', 'properties');
   if (!fs.existsSync(uploadsDir)) {
@@ -65,6 +68,10 @@ async function main() {
     }),
   );
 
+  // Get API URL from environment or use default
+  const apiUrl = configService.get<string>('API_URL') || 'https://api.blocki.levsek.com.mx';
+  const nodeEnv = configService.get<string>('NODE_ENV') || 'development';
+
   const config = new DocumentBuilder()
     .setTitle('Stellar Property Tokenization API')
     .setDescription(
@@ -82,8 +89,8 @@ async function main() {
       bearerFormat: 'Session Token',
       description: 'Enter your Stellar session token',
     })
-    .addServer('http://localhost:3000', 'Development Server')
-    .addServer('https://api.stellar.example.com', 'Production Server')
+    .addServer(apiUrl, nodeEnv === 'production' ? 'Production Server' : 'API Server')
+    .addServer('http://localhost:4000', 'Local Development')
     .build();
 
   const corsOrigins = configService.get<string>('CORS_ORIGINS')?.split(',') || [
@@ -120,6 +127,15 @@ async function main() {
     preflightContinue: false,
     optionsSuccessStatus: 204,
   });
+
+  // Disable caching for all API responses to prevent stale data
+  app.use((req, res, next) => {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Surrogate-Control', 'no-store');
+    next();
+  });
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -133,7 +149,7 @@ async function main() {
     operationIdFactory: (controllerKey: string, methodKey: string) => methodKey,
     deepScanRoutes: true,
   });
-  SwaggerModule.setup('api/docs', app, document, {
+  SwaggerModule.setup('docs', app, document, {
     swaggerOptions: {
       persistAuthorization: true,
       tagsSorter: 'alpha',
@@ -145,7 +161,8 @@ async function main() {
   await app.listen(port);
 
   console.log(`\n🚀 Stellar Property Tokenization API running on: http://localhost:${port}`);
-  console.log(`📚 Swagger documentation: http://localhost:${port}/api/docs`);
+  console.log(`📚 Swagger documentation: http://localhost:${port}/docs`);
+  console.log(`🌐 Production Swagger: ${apiUrl}/docs`);
   console.log(`🔐 Stellar Auth endpoints: http://localhost:${port}/auth/stellar/*`);
 }
 main();

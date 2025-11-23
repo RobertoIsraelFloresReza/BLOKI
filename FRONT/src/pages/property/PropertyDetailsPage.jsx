@@ -3,6 +3,7 @@ import { useProperty } from '@/hooks/useProperties'
 import { PropertyDetails } from './PropertyDetails'
 import { Button } from '@/components/ui'
 import { ArrowLeft } from 'lucide-react'
+import { useStrings } from '@/utils/localizations/useStrings'
 
 /**
  * PropertyDetailsPage Wrapper
@@ -13,6 +14,7 @@ export function PropertyDetailsPage({ user }) {
   const { id } = useParams()
   const navigate = useNavigate()
   const { data: propertyResponse, isLoading, error } = useProperty(id)
+  const Strings = useStrings()
 
   // Handle loading state
   if (isLoading) {
@@ -20,7 +22,7 @@ export function PropertyDetailsPage({ user }) {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
-          <p className="text-muted-foreground">Cargando propiedad...</p>
+          <p className="text-muted-foreground">{Strings.loadingProperty}</p>
         </div>
       </div>
     )
@@ -31,13 +33,13 @@ export function PropertyDetailsPage({ user }) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
-          <h2 className="text-2xl font-bold">Error al cargar propiedad</h2>
+          <h2 className="text-2xl font-bold">{Strings.errorLoadingProperty}</h2>
           <p className="text-muted-foreground">
-            {error.response?.data?.message || error.message || 'No se pudo cargar la propiedad'}
+            {error.response?.data?.message || error.message || Strings.couldNotLoadProperty}
           </p>
           <Button onClick={() => navigate('/')}>
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver al Marketplace
+            {Strings.backToMarketplace}
           </Button>
         </div>
       </div>
@@ -52,13 +54,13 @@ export function PropertyDetailsPage({ user }) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4">
-          <h2 className="text-2xl font-bold">Propiedad no encontrada</h2>
+          <h2 className="text-2xl font-bold">{Strings.errorLoadingProperty}</h2>
           <p className="text-muted-foreground">
-            La propiedad que buscas no existe o fue eliminada
+            {Strings.propertyNotFoundDescription}
           </p>
           <Button onClick={() => navigate('/')}>
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Volver al Marketplace
+            {Strings.backToMarketplace}
           </Button>
         </div>
       </div>

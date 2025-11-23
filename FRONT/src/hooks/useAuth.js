@@ -13,6 +13,19 @@ export function useAuth() {
   const queryClient = useQueryClient()
   const Strings = useStrings()
 
+  // Initialize user from localStorage if available
+  const getInitialUser = () => {
+    const storedUser = localStorage.getItem('blocki_user')
+    if (storedUser) {
+      try {
+        return JSON.parse(storedUser)
+      } catch {
+        return null
+      }
+    }
+    return null
+  }
+
   // Get current user
   const {
     data: user,
@@ -20,16 +33,36 @@ export function useAuth() {
     error,
   } = useQuery({
     queryKey: ['auth', 'user'],
-    queryFn: authService.getProfile,
+    queryFn: async () => {
+      try {
+        const userData = await authService.getProfile()
+        // Update localStorage with fresh user data
+        if (userData) {
+          localStorage.setItem('blocki_user', JSON.stringify(userData))
+        }
+        return userData
+      } catch (error) {
+        // If profile fetch fails, clear invalid data
+        localStorage.removeItem('blocki_token')
+        localStorage.removeItem('blocki_user')
+        return null
+      }
+    },
     enabled: !!localStorage.getItem('blocki_token'),
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    initialData: getInitialUser(), // Use cached user data while loading
+    refetchOnMount: true, // Always refetch on mount to ensure fresh data
   })
 
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: authService.login,
     onSuccess: (data) => {
+      // Store user in localStorage for persistence
+      if (data.user) {
+        localStorage.setItem('blocki_user', JSON.stringify(data.user))
+      }
       queryClient.setQueryData(['auth', 'user'], data.user)
       toast.success(Strings.loginSuccess || '¡Bienvenido!')
     },
@@ -43,6 +76,10 @@ export function useAuth() {
   const registerMutation = useMutation({
     mutationFn: authService.register,
     onSuccess: (data) => {
+      // Store user in localStorage for persistence
+      if (data.user) {
+        localStorage.setItem('blocki_user', JSON.stringify(data.user))
+      }
       // After registration, set user data and show wallet info
       queryClient.setQueryData(['auth', 'user'], data.user)
       toast.success(Strings.registerSuccess || '¡Cuenta creada exitosamente!')
@@ -69,6 +106,10 @@ export function useAuth() {
   const googleSignInMutation = useMutation({
     mutationFn: authService.googleSignIn,
     onSuccess: (data) => {
+      // Store user in localStorage for persistence
+      if (data.user) {
+        localStorage.setItem('blocki_user', JSON.stringify(data.user))
+      }
       queryClient.setQueryData(['auth', 'user'], data.user)
       toast.success(Strings.loginSuccess || '¡Bienvenido!')
     },
@@ -77,6 +118,10 @@ export function useAuth() {
   const githubSignInMutation = useMutation({
     mutationFn: authService.githubSignIn,
     onSuccess: (data) => {
+      // Store user in localStorage for persistence
+      if (data.user) {
+        localStorage.setItem('blocki_user', JSON.stringify(data.user))
+      }
       queryClient.setQueryData(['auth', 'user'], data.user)
       toast.success(Strings.loginSuccess || '¡Bienvenido!')
     },
